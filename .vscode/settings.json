@@ -1,0 +1,56 @@
+{
+    // File Associations
+    "files.associations": {
+        "*.shader": "hlsl",
+        "*.compute": "hlsl",
+        "*.cginc": "hlsl",
+        "*.hlsl": "hlsl",
+        "*.asmdef": "json",
+        "*.asmref": "json",
+        "*.inputactions": "json"
+    },
+
+    // Exclude from Explorer
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/Library": true,
+        "**/Temp": true,
+        "**/Logs": true,
+        "**/UserSettings": true,
+        "**/obj": true,
+        "**/*.meta": false
+    },
+
+    // Search Exclusions
+    "search.exclude": {
+        "**/Library": true,
+        "**/Temp": true,
+        "**/Logs": true,
+        "**/Packages": true,
+        "**/*.asset": true,
+        "**/*.unity": true,
+        "**/*.prefab": true
+    },
+
+    // C# Settings
+    "csharp.referencesCodeLens.enabled": true,
+    "csharp.maxProjectFileCountForDiagnosticAnalysis": 10000,
+
+    // OmniSharp
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.enableImportCompletion": true,
+    "omnisharp.enableDecompilationSupport": true,
+
+    // Editor
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.rulers": [120],
+
+    // Unity Meta Files
+    "[meta]": {
+        "editor.formatOnSave": false
+    }
+}

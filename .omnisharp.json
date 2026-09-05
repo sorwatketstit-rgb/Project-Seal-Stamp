@@ -1,0 +1,29 @@
+{
+    "RoslynExtensionsOptions": {
+        "enableAnalyzersSupport": true,
+        "enableImportCompletion": true,
+        "enableDecompilationSupport": true
+    },
+    "FormattingOptions": {
+        "enableEditorConfigSupport": true,
+        "organizeImports": true
+    },
+    "RenameOptions": {
+        "RenameInComments": false,
+        "RenameInStrings": false,
+        "RenameOverloads": false
+    },
+    "ImplementTypeOptions": {
+        "PropertyGenerationBehavior": "PreferAutoProperties",
+        "InsertionBehavior": "AtTheEnd"
+    },
+    "FileOptions": {
+        "excludeSearchPatterns": [
+            "**/Library/**/*",
+            "**/Temp/**/*",
+            "**/Logs/**/*",
+            "**/obj/**/*",
+            "**/Packages/**/*"
+        ]
+    }
+}
