@@ -7,6 +7,13 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
+    "com.community.antigravity-unity": {
+      "version": "https://github.com/usmanbutt-dev/antigravity-unity.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "9d13ba48c1e2f2d3628e4728b07b65ace21c975a"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
