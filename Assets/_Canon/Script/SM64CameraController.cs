@@ -13,7 +13,7 @@ namespace SM64
     {
         [Header("Targeting")]
         public Transform target;
-        public Vector3 targetOffset = new Vector3(0, 1.5f, 0); // Focus point (e.g., head/chest height)
+        public Vector3 targetOffset = new Vector3(0, 1.5f, 0);
 
         [Header("Orbit Settings")]
         public float rotateSpeed = 120f;
@@ -32,8 +32,21 @@ namespace SM64
 
         private void Awake()
         {
-            _input = GetComponent<SM64PlayerInput>();
             _currentDistance = maxDistance;
+        }
+
+        private void Start()
+        {
+            // Acquire input reference from target if available
+            if (target != null)
+            {
+                _input = target.GetComponent<SM64PlayerInput>();
+            }
+
+            if (_input == null)
+            {
+                _input = FindFirstObjectByType<SM64PlayerInput>();
+            }
         }
 
         private void LateUpdate()
@@ -41,14 +54,17 @@ namespace SM64
             if (target == null)
                 return;
 
-            // Update rotation angles
+            // Fetch input directly from player input reference
+            Vector2 look = Vector2.zero;
             if (_input != null)
             {
-                Vector2 look = _input.LookInput;
-                _yaw += look.x * rotateSpeed * Time.deltaTime;
-                _pitch -= look.y * rotateSpeed * Time.deltaTime;
-                _pitch = Mathf.Clamp(_pitch, -30f, 60f);
+                look = _input.LookInput;
             }
+
+            // Delta values are already frame-rate independent from Mouse.delta
+            _yaw += look.x * rotateSpeed;
+            _pitch -= look.y * rotateSpeed;
+            _pitch = Mathf.Clamp(_pitch, -30f, 60f);
 
             // Handle Zoom Input
             HandleZoom();
@@ -64,7 +80,6 @@ namespace SM64
 
             if (rayLength > 0.001f && Physics.SphereCast(pivot, cameraRadius, rayDirection.normalized, out RaycastHit hit, rayLength, obstructionMask, QueryTriggerInteraction.Ignore))
             {
-                // Pull camera forward to collision point
                 desiredPosition = pivot + rayDirection.normalized * Mathf.Max(hit.distance - cameraRadius, 0.1f);
             }
 

@@ -19,7 +19,7 @@ namespace SM64
         public bool JumpHeld { get; private set; }
         public bool CrouchPressed { get; private set; }
         public bool CrouchHeld { get; private set; }
-        public bool ActionPressed { get; private set; } // Punch / Kick / Dive trigger
+        public bool ActionPressed { get; private set; }
 
         private void Update()
         {
@@ -29,7 +29,6 @@ namespace SM64
         private void ReadInput()
         {
 #if ENABLE_INPUT_SYSTEM
-            // New Input System direct keyboard/gamepad polling fallback
             var keyboard = Keyboard.current;
             var gamepad = Gamepad.current;
 
@@ -59,21 +58,33 @@ namespace SM64
             // Look input
             float lookX = 0f;
             float lookY = 0f;
+
             if (Mouse.current != null && Mouse.current.rightButton.isPressed)
             {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+
                 Vector2 delta = Mouse.current.delta.ReadValue();
-                lookX = delta.x * 0.1f * lookSensitivity;
-                lookY = delta.y * 0.1f * lookSensitivity;
+                // Normalize pixel delta to smooth degree units
+                lookX = delta.x * 0.005f * lookSensitivity;
+                lookY = delta.y * 0.005f * lookSensitivity;
             }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+
             if (gamepad != null)
             {
                 Vector2 rStick = gamepad.rightStick.ReadValue();
                 if (rStick.magnitude > 0.1f)
                 {
-                    lookX = rStick.x * lookSensitivity;
-                    lookY = rStick.y * lookSensitivity;
+                    lookX = rStick.x * lookSensitivity * Time.deltaTime;
+                    lookY = rStick.y * lookSensitivity * Time.deltaTime;
                 }
             }
+
             LookInput = new Vector2(lookX, lookY);
 
             // Action inputs
@@ -90,13 +101,26 @@ namespace SM64
             ActionPressed = (keyboard != null && (keyboard.eKey.wasPressedThisFrame || keyboard.leftCtrlKey.wasPressedThisFrame)) ||
                             (gamepad != null && gamepad.buttonWest.wasPressedThisFrame);
 #else
-            // Legacy Input Manager Fallback
             float moveX = Input.GetAxisRaw("Horizontal");
             float moveY = Input.GetAxisRaw("Vertical");
             MoveInput = Vector2.ClampMagnitude(new Vector2(moveX, moveY), 1f);
 
-            float lookX = Input.GetAxis("Mouse X") * lookSensitivity;
-            float lookY = Input.GetAxis("Mouse Y") * lookSensitivity;
+            float lookX = 0f;
+            float lookY = 0f;
+
+            if (Input.GetMouseButton(1))
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                lookX = Input.GetAxis("Mouse X") * lookSensitivity * 0.05f;
+                lookY = Input.GetAxis("Mouse Y") * lookSensitivity * 0.05f;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+
             LookInput = new Vector2(lookX, lookY);
 
             JumpPressed = Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space);
