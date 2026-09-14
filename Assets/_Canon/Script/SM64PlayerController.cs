@@ -1,25 +1,23 @@
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace SM64
 {
     /// <summary>
-    /// Main character controller implementing SM64‑style movement,
-    /// jumps, long‑jumps, back‑flips, wall‑jumps, and ground snap mechanics.
+    /// SM64-style character controller powered by a modular Finite State Machine.
+    /// Handles grounded movement, responsive double jumping, long-jumps, backflips,
+    /// wall-jumps, and ground-pounds.
     /// </summary>
-    [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(CharacterController), typeof(SM64PlayerInput))]
     public class SM64PlayerController : MonoBehaviour
     {
         [Header("Movement")]
         public float walkSpeed = 3.5f;
         public float runSpeed = 7.0f;
-        public float acceleration = 12f;      // how fast you reach target speed
-        public float deceleration = 16f;      // how fast you stop
-        public float turnSmoothTime = 0.08f;  // turning inertia
+        public float acceleration = 12f;
+        public float deceleration = 16f;
+        public float turnSmoothTime = 0.08f;
 
-        [Header("Jumping")]
+        [Header("Jumping & Double Jump")]
         public float jumpForce = 7.0f;
         public float doubleJumpForce = 6.5f;
         public float tripleJumpForce = 9.0f;
@@ -29,158 +27,170 @@ namespace SM64
         public float gravity = -9.81f;
         public float maxFallSpeed = -20f;
 
-        [Header("Advanced")]
-        public float groundSnapDistance = 0.2f;   // keep you glued to ground
-        public LayerMask groundMask = ~0;         // what counts as ground
-        public float wallCheckDistance = 0.6f;    // for wall‑jump detection
-        public float airControl = 0.4f;           // how responsive you are mid‑air
+        [Header("Double Jump Optimization & Responsiveness")]
+        [Tooltip("Number of jumps allowed in mid-air (1 = double jump, 2 = triple jump)")]
+        public int maxAirJumps = 1;
+        [Tooltip("Grace period (seconds) to jump after running off an edge")]
+        public float coyoteTime = 0.15f;
+        [Tooltip("Window (seconds) to buffer a jump input prior to landing")]
+        public float jumpBufferTime = 0.15f;
 
-        private CharacterController _controller;
-        private SM64PlayerInput _input;
-        private Vector3 _velocity;               // current movement velocity
-        private Vector3 _desiredMovement;        // input‑driven direction
-        private float _yVelocity;                // vertical component
-        private int _jumpCount;                  // 0 = grounded, 1 = single, 2 = double
-        private bool _isLongJumpPrep;
-        private bool _isBackflipPrep;
-        private bool _isGroundPounding;
+        [Header("Advanced / Collision")]
+        public float groundSnapDistance = 0.2f;
+        public LayerMask groundMask = ~0;
+        public float wallCheckDistance = 0.6f;
+        public float airControl = 0.4f;
+
+        [Header("State Machine Debug")]
+        [SerializeField] private string activeState;
+
+        // References & State Machine
+        public CharacterController CharacterController { get; private set; }
+        public SM64PlayerInput Input { get; private set; }
+        public PlayerStateMachine StateMachine { get; private set; }
+
+        // States
+        public PlayerGroundedState GroundedState { get; private set; }
+        public PlayerAirborneState AirborneState { get; private set; }
+        public PlayerLongJumpState LongJumpState { get; private set; }
+        public PlayerBackflipState BackflipState { get; private set; }
+        public PlayerWallJumpState WallJumpState { get; private set; }
+        public PlayerGroundPoundState GroundPoundState { get; private set; }
+
+        // Runtime Velocity & Counters
+        public Vector3 HorizontalVelocity { get; set; }
+        public float VerticalVelocity { get; set; }
+        public int AirJumpsRemaining { get; set; }
+
+        private float _jumpBufferCounter;
         private float _turnSmoothVelocity;
 
         private void Awake()
         {
-            _controller = GetComponent<CharacterController>();
-            _input = GetComponent<SM64PlayerInput>();
-            if (_input == null)
+            CharacterController = GetComponent<CharacterController>();
+            Input = GetComponent<SM64PlayerInput>();
+            if (Input == null)
             {
-                Debug.LogError("SM64PlayerInput component missing on Player.");
+                Input = gameObject.AddComponent<SM64PlayerInput>();
             }
+
+            // Initialize State Machine and concrete states
+            StateMachine = new PlayerStateMachine();
+            GroundedState = new PlayerGroundedState(this, StateMachine);
+            AirborneState = new PlayerAirborneState(this, StateMachine);
+            LongJumpState = new PlayerLongJumpState(this, StateMachine);
+            BackflipState = new PlayerBackflipState(this, StateMachine);
+            WallJumpState = new PlayerWallJumpState(this, StateMachine);
+            GroundPoundState = new PlayerGroundPoundState(this, StateMachine);
+
+            StateMachine.OnStateChanged += state => activeState = state.GetType().Name;
+        }
+
+        private void Start()
+        {
+            StateMachine.Initialize(GroundedState);
         }
 
         private void Update()
         {
-            HandleMovement();
-            HandleJumping();
-            ApplyGravity();
-            _controller.Move(_velocity * Time.deltaTime);
-        }
-
-        private bool IsGrounded()
-        {
-            if (_controller.isGrounded)
-                return true;
-            return Physics.Raycast(transform.position, Vector3.down, groundSnapDistance, groundMask);
-        }
-
-        private bool IsTouchingWall(out Vector3 wallNormal)
-        {
-            Vector3[] dirs = { transform.right, -transform.right };
-            foreach (var dir in dirs)
+            // Jump buffer timer
+            if (_jumpBufferCounter > 0f)
             {
-                if (Physics.Raycast(transform.position, dir, out RaycastHit hit, wallCheckDistance, groundMask))
+                _jumpBufferCounter -= Time.deltaTime;
+            }
+
+            // State Machine frame execution
+            StateMachine.HandleInput();
+            StateMachine.LogicUpdate();
+            StateMachine.PhysicsUpdate();
+
+            // Execute movement through CharacterController
+            Vector3 finalVelocity = new Vector3(HorizontalVelocity.x, VerticalVelocity, HorizontalVelocity.z);
+            CharacterController.Move(finalVelocity * Time.deltaTime);
+        }
+
+        #region Helpers & Physics Utilities
+
+        public void ResetAirJumps()
+        {
+            AirJumpsRemaining = maxAirJumps;
+        }
+
+        public void BufferJump()
+        {
+            _jumpBufferCounter = jumpBufferTime;
+        }
+
+        public bool ConsumeBufferedJump()
+        {
+            if (_jumpBufferCounter > 0f)
+            {
+                _jumpBufferCounter = 0f;
+                return true;
+            }
+            return false;
+        }
+
+        public bool IsGrounded()
+        {
+            if (CharacterController.isGrounded)
+                return true;
+
+            // Extra ground check using sphere/raycast for snappy step-downs
+            return Physics.Raycast(transform.position, Vector3.down, groundSnapDistance + CharacterController.skinWidth, groundMask, QueryTriggerInteraction.Ignore);
+        }
+
+        public bool CheckWall(out Vector3 wallNormal)
+        {
+            Vector3 origin = transform.position + Vector3.up * (CharacterController.height * 0.5f);
+            Vector3[] directions = { transform.forward, -transform.forward, transform.right, -transform.right };
+
+            foreach (var dir in directions)
+            {
+                if (Physics.Raycast(origin, dir, out RaycastHit hit, wallCheckDistance, groundMask, QueryTriggerInteraction.Ignore))
                 {
                     wallNormal = hit.normal;
                     return true;
                 }
             }
+
             wallNormal = Vector3.zero;
             return false;
         }
 
-        private void HandleMovement()
+        public Vector3 GetCameraRelativeInput(Vector2 moveInput)
         {
-            // Determine target speed
-            float targetSpeed = _input.MoveInput.magnitude > 0.1f
-                ? (_input.CrouchHeld ? walkSpeed : runSpeed)
-                : 0f;
+            if (moveInput.sqrMagnitude < 0.001f)
+                return Vector3.zero;
 
-            // Desired horizontal direction relative to main camera
             Transform cam = Camera.main != null ? Camera.main.transform : null;
             Vector3 camForward = cam ? Vector3.Scale(cam.forward, new Vector3(1, 0, 1)).normalized : Vector3.forward;
             Vector3 camRight = cam ? Vector3.Scale(cam.right, new Vector3(1, 0, 1)).normalized : Vector3.right;
 
-            _desiredMovement = (camForward * _input.MoveInput.y + camRight * _input.MoveInput.x).normalized * targetSpeed;
-
-            // Smooth acceleration / deceleration
-            float currentHorizontalSpeed = new Vector3(_velocity.x, 0, _velocity.z).magnitude;
-            float accel = (targetSpeed > currentHorizontalSpeed) ? acceleration : deceleration;
-            currentHorizontalSpeed = Mathf.MoveTowards(currentHorizontalSpeed, targetSpeed, accel * Time.deltaTime);
-
-            // Turn smoothing
-            if (_desiredMovement.sqrMagnitude > 0.0001f)
-            {
-                float targetAngle = Mathf.Atan2(_desiredMovement.x, _desiredMovement.z) * Mathf.Rad2Deg;
-                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turnSmoothTime);
-                transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            }
-
-            Vector3 horizontal = transform.forward * currentHorizontalSpeed;
-            _velocity = new Vector3(horizontal.x, _yVelocity, horizontal.z);
+            return (camForward * moveInput.y + camRight * moveInput.x).normalized;
         }
 
-        private void HandleJumping()
+        public void RotateTowards(Vector3 direction, float smoothTime)
         {
-            // Reset jump states on ground impact
-            if (IsGrounded())
-            {
-                _jumpCount = 0;
-                _isLongJumpPrep = _isBackflipPrep = _isGroundPounding = false;
-            }
+            if (direction.sqrMagnitude < 0.001f)
+                return;
 
-            // Prep triggers
-            if (_input.CrouchPressed && IsGrounded())
-            {
-                _isLongJumpPrep = true;
-                _isBackflipPrep = _desiredMovement.sqrMagnitude < 0.01f;
-            }
-
-            // Jump handling
-            if (_input.JumpPressed)
-            {
-                if (_isLongJumpPrep)
-                {
-                    _yVelocity = longJumpForce;
-                    _velocity += transform.forward * runSpeed * 1.2f;
-                    _isLongJumpPrep = false;
-                }
-                else if (_isBackflipPrep)
-                {
-                    _yVelocity = backflipForce;
-                    _isBackflipPrep = false;
-                }
-                else if (IsGrounded())
-                {
-                    _yVelocity = jumpForce;
-                    _jumpCount = 1;
-                }
-                else if (_jumpCount == 1 && !_isGroundPounding)
-                {
-                    _yVelocity = doubleJumpForce;
-                    _jumpCount = 2;
-                }
-                else if (_jumpCount == 2 && !_isGroundPounding)
-                {
-                    _yVelocity = tripleJumpForce;
-                }
-            }
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, smoothTime);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
         }
 
-        private void ApplyGravity()
+        public void ApplyGravity(float multiplier = 1f)
         {
-            if (IsGrounded() && _yVelocity < 0f)
+            if (IsGrounded() && VerticalVelocity < 0f)
             {
-                _yVelocity = -2f; // keeps player grounded
+                VerticalVelocity = -2f;
                 return;
             }
 
-            // Wall jump check
-            if (!IsGrounded() && _input.JumpPressed && IsTouchingWall(out Vector3 wallNormal))
-            {
-                Vector3 away = (wallNormal + Vector3.up).normalized;
-                _yVelocity = wallJumpForce;
-                _velocity += away * wallJumpForce;
-            }
-
-            _yVelocity = Mathf.Max(_yVelocity + gravity * Time.deltaTime, maxFallSpeed);
+            VerticalVelocity = Mathf.Max(VerticalVelocity + gravity * multiplier * Time.deltaTime, maxFallSpeed);
         }
+
+        #endregion
     }
 }
