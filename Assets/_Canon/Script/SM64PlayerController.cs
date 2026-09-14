@@ -5,7 +5,7 @@ namespace SM64
     /// <summary>
     /// SM64-style character controller powered by a modular Finite State Machine.
     /// Handles grounded movement, responsive double jumping, long-jumps, backflips,
-    /// wall-jumps, and ground-pounds.
+    /// wall-jumps, wall-sliding with cling, ledge-grabbing, and ground-pounds.
     /// </summary>
     [RequireComponent(typeof(CharacterController), typeof(SM64PlayerInput))]
     public class SM64PlayerController : MonoBehaviour
@@ -35,7 +35,25 @@ namespace SM64
         [Tooltip("Window (seconds) to buffer a jump input prior to landing")]
         public float jumpBufferTime = 0.15f;
 
-        [Header("Advanced / Collision")]
+        [Header("Wall Slide & Cling Settings")]
+        [Tooltip("Layer considered as wall surfaces for sliding and ledge grabbing.")]
+        public LayerMask wallLayerMask;
+        [Tooltip("Duration in seconds the character clings to the wall before sliding down.")]
+        public float wallClingDuration = 0.35f;
+        [Tooltip("Downward speed while sliding down a wall.")]
+        public float wallSlideSpeed = 2.0f;
+
+        [Header("Ledge Grab Settings")]
+        [Tooltip("Offset relative to the detected ledge edge where the character hangs (X=lateral, Y=height below edge, Z=distance from wall).")]
+        public Vector3 ledgeHangOffset = new Vector3(0f, -1.0f, 0.35f);
+
+        [Header("Sensor Settings (Top & Middle Dots)")]
+        [Tooltip("Forward ray distance for the top and middle wall sensors.")]
+        public float sensorDistance = 0.65f;
+        [Tooltip("Margin from the very top of the collider for the upper sensor dot.")]
+        public float topSensorMargin = 0.06f;
+
+        [Header("Ground / Collision")]
         public float groundSnapDistance = 0.2f;
         public LayerMask groundMask = ~0;
         public float wallCheckDistance = 0.6f;
@@ -52,6 +70,8 @@ namespace SM64
         // States
         public PlayerGroundedState GroundedState { get; private set; }
         public PlayerAirborneState AirborneState { get; private set; }
+        public PlayerWallSlideState WallSlideState { get; private set; }
+        public PlayerLedgeGrabState LedgeGrabState { get; private set; }
         public PlayerLongJumpState LongJumpState { get; private set; }
         public PlayerBackflipState BackflipState { get; private set; }
         public PlayerWallJumpState WallJumpState { get; private set; }
@@ -74,10 +94,19 @@ namespace SM64
                 Input = gameObject.AddComponent<SM64PlayerInput>();
             }
 
+            // Default to "Wall" layer (Layer 6 in TagManager) if not assigned
+            if (wallLayerMask.value == 0)
+            {
+                int wallLayer = LayerMask.NameToLayer("Wall");
+                wallLayerMask = wallLayer != -1 ? (1 << wallLayer) : (1 << 6);
+            }
+
             // Initialize State Machine and concrete states
             StateMachine = new PlayerStateMachine();
             GroundedState = new PlayerGroundedState(this, StateMachine);
             AirborneState = new PlayerAirborneState(this, StateMachine);
+            WallSlideState = new PlayerWallSlideState(this, StateMachine);
+            LedgeGrabState = new PlayerLedgeGrabState(this, StateMachine);
             LongJumpState = new PlayerLongJumpState(this, StateMachine);
             BackflipState = new PlayerBackflipState(this, StateMachine);
             WallJumpState = new PlayerWallJumpState(this, StateMachine);
@@ -104,10 +133,83 @@ namespace SM64
             StateMachine.LogicUpdate();
             StateMachine.PhysicsUpdate();
 
-            // Execute movement through CharacterController
-            Vector3 finalVelocity = new Vector3(HorizontalVelocity.x, VerticalVelocity, HorizontalVelocity.z);
-            CharacterController.Move(finalVelocity * Time.deltaTime);
+            // Execute movement through CharacterController if enabled
+            if (CharacterController.enabled)
+            {
+                Vector3 finalVelocity = new Vector3(HorizontalVelocity.x, VerticalVelocity, HorizontalVelocity.z);
+                CharacterController.Move(finalVelocity * Time.deltaTime);
+            }
         }
+
+        #region Wall & Ledge Sensor Detection
+
+        public Vector3 GetTopSensorOrigin()
+        {
+            float halfHeight = CharacterController != null ? CharacterController.height * 0.5f : 1.0f;
+            float centerY = CharacterController != null ? CharacterController.center.y : 0f;
+            return transform.position + Vector3.up * (centerY + halfHeight - topSensorMargin);
+        }
+
+        public Vector3 GetMiddleSensorOrigin()
+        {
+            float centerY = CharacterController != null ? CharacterController.center.y : 0f;
+            return transform.position + Vector3.up * centerY;
+        }
+
+        /// <summary>
+        /// Casts the 2 sensor dots (top and middle) against the wallLayerMask.
+        /// </summary>
+        public bool CheckWallSensors(out bool middleHit, out bool topHit, out RaycastHit middleHitInfo, out RaycastHit topHitInfo)
+        {
+            Vector3 topOrigin = GetTopSensorOrigin();
+            Vector3 middleOrigin = GetMiddleSensorOrigin();
+            Vector3 castDir = transform.forward;
+
+            topHit = Physics.Raycast(topOrigin, castDir, out topHitInfo, sensorDistance, wallLayerMask, QueryTriggerInteraction.Ignore);
+            middleHit = Physics.Raycast(middleOrigin, castDir, out middleHitInfo, sensorDistance, wallLayerMask, QueryTriggerInteraction.Ignore);
+
+            return middleHit || topHit;
+        }
+
+        /// <summary>
+        /// Resolves hang and climb-up positions for an edge, supporting LedgeMarker components or automatic geometric edge finding.
+        /// </summary>
+        public bool FindLedgePositions(RaycastHit middleHitInfo, out Vector3 hangPos, out Vector3 climbPos, out Vector3 wallNormal)
+        {
+            wallNormal = middleHitInfo.normal;
+
+            // 1. Check if the wall has an explicit LedgeMarker plane attached
+            LedgeMarker marker = middleHitInfo.collider.GetComponentInParent<LedgeMarker>() ??
+                                 middleHitInfo.collider.GetComponentInChildren<LedgeMarker>();
+            if (marker != null)
+            {
+                hangPos = marker.GetHangPosition();
+                climbPos = marker.GetClimbPosition();
+                wallNormal = marker.GetWallNormal();
+                return true;
+            }
+
+            // 2. Automatic geometric edge finding
+            Vector3 topOrigin = GetTopSensorOrigin();
+            Vector3 downCastOrigin = topOrigin + transform.forward * (middleHitInfo.distance + 0.12f) + Vector3.up * 0.2f;
+
+            if (Physics.Raycast(downCastOrigin, Vector3.down, out RaycastHit topSurfaceHit, CharacterController.height * 0.8f, wallLayerMask, QueryTriggerInteraction.Ignore))
+            {
+                float edgeY = topSurfaceHit.point.y;
+                Vector3 edgePoint = new Vector3(middleHitInfo.point.x, edgeY, middleHitInfo.point.z);
+
+                // Position player hanging with hands aligned to the edge
+                hangPos = edgePoint + wallNormal * ledgeHangOffset.z + Vector3.up * ledgeHangOffset.y;
+                climbPos = topSurfaceHit.point + Vector3.up * (CharacterController.height * 0.5f) + (-wallNormal * 0.4f);
+                return true;
+            }
+
+            hangPos = Vector3.zero;
+            climbPos = Vector3.zero;
+            return false;
+        }
+
+        #endregion
 
         #region Helpers & Physics Utilities
 
@@ -136,7 +238,6 @@ namespace SM64
             if (CharacterController.isGrounded)
                 return true;
 
-            // Extra ground check using sphere/raycast for snappy step-downs
             return Physics.Raycast(transform.position, Vector3.down, groundSnapDistance + CharacterController.skinWidth, groundMask, QueryTriggerInteraction.Ignore);
         }
 
@@ -189,6 +290,26 @@ namespace SM64
             }
 
             VerticalVelocity = Mathf.Max(VerticalVelocity + gravity * multiplier * Time.deltaTime, maxFallSpeed);
+        }
+
+        #endregion
+
+        #region Scene Gizmos
+
+        private void OnDrawGizmosSelected()
+        {
+            Vector3 topOrigin = GetTopSensorOrigin();
+            Vector3 middleOrigin = GetMiddleSensorOrigin();
+
+            // Draw Middle Sensor Dot & Ray
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(middleOrigin, 0.06f);
+            Gizmos.DrawRay(middleOrigin, transform.forward * sensorDistance);
+
+            // Draw Top Sensor Dot & Ray
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawSphere(topOrigin, 0.06f);
+            Gizmos.DrawRay(topOrigin, transform.forward * sensorDistance);
         }
 
         #endregion

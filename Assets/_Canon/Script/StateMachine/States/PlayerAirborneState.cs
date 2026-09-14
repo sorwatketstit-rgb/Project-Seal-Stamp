@@ -28,7 +28,6 @@ namespace SM64
 
         public override void Enter()
         {
-            // Enter air state
         }
 
         public override void HandleInput()
@@ -45,7 +44,7 @@ namespace SM64
             // Jump handling
             if (Input.JumpPressed)
             {
-                // Wall jump priority
+                // Wall jump priority if near a wall
                 if (Controller.CheckWall(out Vector3 wallNormal))
                 {
                     Controller.WallJumpState.SetWallNormal(wallNormal);
@@ -69,7 +68,7 @@ namespace SM64
                     return;
                 }
 
-                // If no jumps remain, buffer the jump for landing
+                // Buffer the jump for immediate execution upon landing
                 Controller.BufferJump();
             }
         }
@@ -93,6 +92,12 @@ namespace SM64
 
         public override void LogicUpdate()
         {
+            // Cooldown for ledge grabbing
+            if (Controller.LedgeGrabState != null && Controller.LedgeGrabState.LedgeCooldownTimer > 0f)
+            {
+                Controller.LedgeGrabState.LedgeCooldownTimer -= Time.deltaTime;
+            }
+
             // Coyote timer countdown
             if (_canCoyoteJump && _coyoteTimeCounter > 0f)
             {
@@ -100,6 +105,40 @@ namespace SM64
                 if (_coyoteTimeCounter <= 0f)
                 {
                     _canCoyoteJump = false;
+                }
+            }
+
+            // 2-Dot Sensor Evaluation (Wall Slide vs Ledge Grab)
+            if (Controller.LedgeGrabState == null || Controller.LedgeGrabState.LedgeCooldownTimer <= 0f)
+            {
+                bool hasWallContact = Controller.CheckWallSensors(out bool middleHit, out bool topHit, out RaycastHit middleHitInfo, out RaycastHit topHitInfo);
+
+                if (hasWallContact)
+                {
+                    // Case 1: Both dots hit -> Wall Slide (Cling + Slow Slide)
+                    if (middleHit && topHit)
+                    {
+                        float facingDot = Vector3.Dot(Controller.transform.forward, -middleHitInfo.normal);
+                        if (facingDot > 0.15f || Controller.VerticalVelocity < 0f)
+                        {
+                            Controller.WallSlideState.SetWallContact(middleHitInfo.normal);
+                            StateMachine.ChangeState(Controller.WallSlideState);
+                            return;
+                        }
+                    }
+                    // Case 2: Only Middle dot hits (Top dot is clear) -> Ledge Grab
+                    else if (middleHit && !topHit)
+                    {
+                        if (Controller.VerticalVelocity < 5f)
+                        {
+                            if (Controller.FindLedgePositions(middleHitInfo, out Vector3 hangPos, out Vector3 climbPos, out Vector3 wallNormal))
+                            {
+                                Controller.LedgeGrabState.SetupLedge(hangPos, climbPos, wallNormal);
+                                StateMachine.ChangeState(Controller.LedgeGrabState);
+                                return;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -127,7 +166,7 @@ namespace SM64
             }
             else
             {
-                // Slight air drag
+                // Air drag
                 Controller.HorizontalVelocity = Vector3.MoveTowards(currentHoriz, Vector3.zero, Controller.deceleration * 0.2f * Time.deltaTime);
             }
         }
