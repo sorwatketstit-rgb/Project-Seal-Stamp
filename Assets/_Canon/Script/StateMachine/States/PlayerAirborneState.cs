@@ -85,7 +85,7 @@ namespace SM64
             if (desiredDir.sqrMagnitude > 0.05f)
             {
                 Controller.RotateTowards(desiredDir, Controller.turnSmoothTime);
-                float forwardSpeed = Mathf.Max(Controller.HorizontalVelocity.magnitude, Controller.runSpeed * 0.8f);
+                float forwardSpeed = Mathf.Max(Controller.HorizontalVelocity.magnitude, Controller.walkSpeed * 1.2f);
                 Controller.HorizontalVelocity = Controller.transform.forward * forwardSpeed;
             }
         }
@@ -142,10 +142,10 @@ namespace SM64
                 }
             }
 
-            // Landing check
+            // Landing check: Evaluates speed threshold (walkSpeed * 1.5) to decide Walking vs Running
             if (Controller.VerticalVelocity <= 0f && Controller.IsGrounded())
             {
-                StateMachine.ChangeState(Controller.GroundedState);
+                StateMachine.ChangeState(Controller.GetLandingMovementState());
             }
         }
 
@@ -154,20 +154,22 @@ namespace SM64
             // Apply gravity
             Controller.ApplyGravity();
 
-            // Air control for horizontal steering
-            Vector3 desiredDir = Controller.GetCameraRelativeInput(Input != null ? Input.MoveInput : Vector2.zero);
+            // Gradually decay horizontal air speed (air resistance)
             Vector3 currentHoriz = Controller.HorizontalVelocity;
+            currentHoriz = Vector3.MoveTowards(currentHoriz, Vector3.zero, Controller.airSpeedDecay * Time.deltaTime);
 
+            // Air control steering
+            Vector3 desiredDir = Controller.GetCameraRelativeInput(Input != null ? Input.MoveInput : Vector2.zero);
             if (desiredDir.sqrMagnitude > 0.01f)
             {
                 Controller.RotateTowards(desiredDir, Controller.turnSmoothTime * 1.5f);
-                Vector3 targetHoriz = Controller.transform.forward * Controller.runSpeed;
+                float speed = currentHoriz.magnitude;
+                Vector3 targetHoriz = Controller.transform.forward * speed;
                 Controller.HorizontalVelocity = Vector3.Lerp(currentHoriz, targetHoriz, Controller.airControl * Time.deltaTime * 5f);
             }
             else
             {
-                // Air drag
-                Controller.HorizontalVelocity = Vector3.MoveTowards(currentHoriz, Vector3.zero, Controller.deceleration * 0.2f * Time.deltaTime);
+                Controller.HorizontalVelocity = currentHoriz;
             }
         }
 

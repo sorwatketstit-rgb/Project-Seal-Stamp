@@ -33,7 +33,7 @@ namespace SM64
         {
             if (Controller.VerticalVelocity <= 0f && Controller.IsGrounded())
             {
-                StateMachine.ChangeState(Controller.GroundedState);
+                StateMachine.ChangeState(Controller.GetLandingMovementState());
             }
         }
 

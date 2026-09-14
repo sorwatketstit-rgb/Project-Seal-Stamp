@@ -2,10 +2,16 @@ using UnityEngine;
 
 namespace SM64
 {
+    public enum MovementSubState
+    {
+        Walking,
+        Running
+    }
+
     /// <summary>
     /// SM64-style character controller powered by a modular Finite State Machine.
-    /// Handles grounded movement, responsive double jumping, long-jumps, backflips,
-    /// wall-jumps, wall-sliding with cling, ledge-grabbing, and ground-pounds.
+    /// Handles grounded movement (Walking and Running sub-states), responsive double jumping,
+    /// long-jumps, backflips, wall-jumps, wall-sliding with cling, ledge-grabbing, and ground-pounds.
     /// </summary>
     [RequireComponent(typeof(CharacterController), typeof(SM64PlayerInput))]
     public class SM64PlayerController : MonoBehaviour
@@ -16,6 +22,14 @@ namespace SM64
         public float acceleration = 12f;
         public float deceleration = 16f;
         public float turnSmoothTime = 0.08f;
+
+        [Header("Running Mechanics")]
+        [Tooltip("Continuous hold time (seconds) in 1 direction required to activate running.")]
+        public float runActivationTime = 3.0f;
+        [Tooltip("Rapid braking deceleration rate when movement keys are released in Running state.")]
+        public float rapidDeceleration = 32.0f;
+        [Tooltip("Rate at which horizontal speed gradually decays while in the air.")]
+        public float airSpeedDecay = 1.2f;
 
         [Header("Jumping & Double Jump")]
         public float jumpForce = 7.0f;
@@ -61,6 +75,7 @@ namespace SM64
 
         [Header("State Machine Debug")]
         [SerializeField] private string activeState;
+        [SerializeField] private MovementSubState currentMovementSubState = MovementSubState.Walking;
 
         // References & State Machine
         public CharacterController CharacterController { get; private set; }
@@ -68,7 +83,9 @@ namespace SM64
         public PlayerStateMachine StateMachine { get; private set; }
 
         // States
-        public PlayerGroundedState GroundedState { get; private set; }
+        public PlayerWalkingState WalkingState { get; private set; }
+        public PlayerRunningState RunningState { get; private set; }
+        public PlayerGroundedState GroundedState => WalkingState; // Backwards compatibility alias
         public PlayerAirborneState AirborneState { get; private set; }
         public PlayerWallSlideState WallSlideState { get; private set; }
         public PlayerLedgeGrabState LedgeGrabState { get; private set; }
@@ -76,6 +93,15 @@ namespace SM64
         public PlayerBackflipState BackflipState { get; private set; }
         public PlayerWallJumpState WallJumpState { get; private set; }
         public PlayerGroundPoundState GroundPoundState { get; private set; }
+
+        // Movement Sub-State
+        public MovementSubState CurrentMovementSubState
+        {
+            get => currentMovementSubState;
+            set => currentMovementSubState = value;
+        }
+
+        public float RunLandingThreshold => walkSpeed * 1.5f;
 
         // Runtime Velocity & Counters
         public Vector3 HorizontalVelocity { get; set; }
@@ -103,7 +129,8 @@ namespace SM64
 
             // Initialize State Machine and concrete states
             StateMachine = new PlayerStateMachine();
-            GroundedState = new PlayerGroundedState(this, StateMachine);
+            WalkingState = new PlayerWalkingState(this, StateMachine);
+            RunningState = new PlayerRunningState(this, StateMachine);
             AirborneState = new PlayerAirborneState(this, StateMachine);
             WallSlideState = new PlayerWallSlideState(this, StateMachine);
             LedgeGrabState = new PlayerLedgeGrabState(this, StateMachine);
@@ -117,7 +144,7 @@ namespace SM64
 
         private void Start()
         {
-            StateMachine.Initialize(GroundedState);
+            StateMachine.Initialize(WalkingState);
         }
 
         private void Update()
@@ -141,6 +168,22 @@ namespace SM64
             }
         }
 
+        /// <summary>
+        /// Evaluates whether landing from airborne keeps Running or returns to Walking
+        /// based on horizontal speed >= (walkSpeed + half of walkSpeed = 1.5 * walkSpeed).
+        /// </summary>
+        public IPlayerState GetLandingMovementState()
+        {
+            float currentSpeed = HorizontalVelocity.magnitude;
+            if (CurrentMovementSubState == MovementSubState.Running && currentSpeed >= RunLandingThreshold)
+            {
+                return RunningState;
+            }
+
+            CurrentMovementSubState = MovementSubState.Walking;
+            return WalkingState;
+        }
+
         #region Wall & Ledge Sensor Detection
 
         public Vector3 GetTopSensorOrigin()
@@ -156,9 +199,6 @@ namespace SM64
             return transform.position + Vector3.up * centerY;
         }
 
-        /// <summary>
-        /// Casts the 2 sensor dots (top and middle) against the wallLayerMask.
-        /// </summary>
         public bool CheckWallSensors(out bool middleHit, out bool topHit, out RaycastHit middleHitInfo, out RaycastHit topHitInfo)
         {
             Vector3 topOrigin = GetTopSensorOrigin();
@@ -171,9 +211,6 @@ namespace SM64
             return middleHit || topHit;
         }
 
-        /// <summary>
-        /// Resolves hang and climb-up positions for an edge, supporting LedgeMarker components or automatic geometric edge finding.
-        /// </summary>
         public bool FindLedgePositions(RaycastHit middleHitInfo, out Vector3 hangPos, out Vector3 climbPos, out Vector3 wallNormal)
         {
             wallNormal = middleHitInfo.normal;
@@ -198,7 +235,6 @@ namespace SM64
                 float edgeY = topSurfaceHit.point.y;
                 Vector3 edgePoint = new Vector3(middleHitInfo.point.x, edgeY, middleHitInfo.point.z);
 
-                // Position player hanging with hands aligned to the edge
                 hangPos = edgePoint + wallNormal * ledgeHangOffset.z + Vector3.up * ledgeHangOffset.y;
                 climbPos = topSurfaceHit.point + Vector3.up * (CharacterController.height * 0.5f) + (-wallNormal * 0.4f);
                 return true;

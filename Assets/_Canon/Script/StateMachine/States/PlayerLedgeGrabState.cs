@@ -34,6 +34,7 @@ namespace SM64
             Controller.ResetAirJumps();
             Controller.VerticalVelocity = 0f;
             Controller.HorizontalVelocity = Vector3.zero;
+            Controller.CurrentMovementSubState = MovementSubState.Walking;
 
             _isClimbing = false;
             _climbProgress = 0f;
@@ -138,7 +139,7 @@ namespace SM64
                     Controller.transform.position = _climbPosition;
                     CharController.enabled = true;
                     _isClimbing = false;
-                    StateMachine.ChangeState(Controller.GroundedState);
+                    StateMachine.ChangeState(Controller.WalkingState);
                 }
             }
         }

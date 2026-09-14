@@ -2,25 +2,29 @@ using UnityEngine;
 
 namespace SM64
 {
-    public class PlayerGroundedState : PlayerState
+    /// <summary>
+    /// Base class for grounded movement states (Walking and Running).
+    /// Provides shared slope handling, ground snapping, jump takeoff, and ledge fall detection.
+    /// </summary>
+    public abstract class PlayerGroundedState : PlayerState
     {
-        private bool _isLongJumpPrep;
-        private bool _isBackflipPrep;
-        private float _prepTimer;
-        private const float PrepTimeout = 0.5f;
+        protected bool IsLongJumpPrep;
+        protected bool IsBackflipPrep;
+        protected float PrepTimer;
+        protected const float PrepTimeout = 0.5f;
 
-        public PlayerGroundedState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
+        protected PlayerGroundedState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
             : base(controller, stateMachine) { }
 
         public override void Enter()
         {
             Controller.ResetAirJumps();
-            Controller.VerticalVelocity = -2f; // keeps controller grounded
-            _isLongJumpPrep = false;
-            _isBackflipPrep = false;
-            _prepTimer = 0f;
+            Controller.VerticalVelocity = -2f; // keeps controller glued to ground
+            IsLongJumpPrep = false;
+            IsBackflipPrep = false;
+            PrepTimer = 0f;
 
-            // Check if jump buffer was active upon landing
+            // Check if a jump was buffered prior to landing
             if (Controller.ConsumeBufferedJump())
             {
                 TriggerJump();
@@ -37,24 +41,24 @@ namespace SM64
                 Vector3 moveDir = Controller.GetCameraRelativeInput(Input.MoveInput);
                 if (moveDir.sqrMagnitude > 0.05f)
                 {
-                    _isLongJumpPrep = true;
-                    _isBackflipPrep = false;
+                    IsLongJumpPrep = true;
+                    IsBackflipPrep = false;
                 }
                 else
                 {
-                    _isBackflipPrep = true;
-                    _isLongJumpPrep = false;
+                    IsBackflipPrep = true;
+                    IsLongJumpPrep = false;
                 }
-                _prepTimer = PrepTimeout;
+                PrepTimer = PrepTimeout;
             }
 
-            if (_isLongJumpPrep || _isBackflipPrep)
+            if (IsLongJumpPrep || IsBackflipPrep)
             {
-                _prepTimer -= Time.deltaTime;
-                if (_prepTimer <= 0f || !Input.CrouchHeld)
+                PrepTimer -= Time.deltaTime;
+                if (PrepTimer <= 0f || !Input.CrouchHeld)
                 {
-                    _isLongJumpPrep = false;
-                    _isBackflipPrep = false;
+                    IsLongJumpPrep = false;
+                    IsBackflipPrep = false;
                 }
             }
 
@@ -65,21 +69,21 @@ namespace SM64
             }
         }
 
-        private void TriggerJump()
+        protected virtual void TriggerJump()
         {
-            if (_isLongJumpPrep)
+            if (IsLongJumpPrep)
             {
                 StateMachine.ChangeState(Controller.LongJumpState);
                 return;
             }
 
-            if (_isBackflipPrep)
+            if (IsBackflipPrep)
             {
                 StateMachine.ChangeState(Controller.BackflipState);
                 return;
             }
 
-            // Standard ground jump
+            // Standard ground jump into AirborneState
             Controller.VerticalVelocity = Controller.jumpForce;
             Controller.AirborneState.SetupJump(consumedAirJump: false);
             StateMachine.ChangeState(Controller.AirborneState);
@@ -87,7 +91,7 @@ namespace SM64
 
         public override void LogicUpdate()
         {
-            // If walked off a ledge into the air
+            // If stepped off a ledge into the air
             if (!Controller.IsGrounded())
             {
                 Controller.AirborneState.SetupFallWithCoyoteTime();
@@ -95,33 +99,10 @@ namespace SM64
             }
         }
 
-        public override void PhysicsUpdate()
-        {
-            Vector3 desiredDir = Controller.GetCameraRelativeInput(Input != null ? Input.MoveInput : Vector2.zero);
-            float targetSpeed = desiredDir.magnitude > 0.1f
-                ? ((Input != null && Input.CrouchHeld) ? Controller.walkSpeed : Controller.runSpeed)
-                : 0f;
-
-            // Smooth horizontal speed
-            Vector3 currentHoriz = Controller.HorizontalVelocity;
-            float currentSpeed = currentHoriz.magnitude;
-            float accel = (targetSpeed > currentSpeed) ? Controller.acceleration : Controller.deceleration;
-            currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accel * Time.deltaTime);
-
-            // Smooth rotation towards movement direction
-            if (desiredDir.sqrMagnitude > 0.001f)
-            {
-                Controller.RotateTowards(desiredDir, Controller.turnSmoothTime);
-            }
-
-            Vector3 newHoriz = (currentSpeed > 0.001f) ? Controller.transform.forward * currentSpeed : Vector3.zero;
-            Controller.HorizontalVelocity = newHoriz;
-        }
-
         public override void Exit()
         {
-            _isLongJumpPrep = false;
-            _isBackflipPrep = false;
+            IsLongJumpPrep = false;
+            IsBackflipPrep = false;
         }
     }
 }

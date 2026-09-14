@@ -77,7 +77,8 @@ namespace SM64
             // Landing check
             if (Controller.IsGrounded())
             {
-                StateMachine.ChangeState(Controller.GroundedState);
+                Controller.CurrentMovementSubState = MovementSubState.Walking;
+                StateMachine.ChangeState(Controller.WalkingState);
                 return;
             }
 

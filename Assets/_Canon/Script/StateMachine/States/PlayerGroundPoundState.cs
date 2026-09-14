@@ -63,7 +63,8 @@ namespace SM64
                 case Phase.Recovery:
                     if (_phaseTimer <= 0f)
                     {
-                        StateMachine.ChangeState(Controller.GroundedState);
+                        Controller.CurrentMovementSubState = MovementSubState.Walking;
+                        StateMachine.ChangeState(Controller.WalkingState);
                     }
                     break;
             }
