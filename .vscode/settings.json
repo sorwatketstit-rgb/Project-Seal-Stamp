@@ -1,5 +1,4 @@
 {
-    // File Associations
     "files.associations": {
         "*.shader": "hlsl",
         "*.compute": "hlsl",
@@ -9,8 +8,6 @@
         "*.asmref": "json",
         "*.inputactions": "json"
     },
-
-    // Exclude from Explorer
     "files.exclude": {
         "**/.git": true,
         "**/.DS_Store": true,
@@ -21,8 +18,6 @@
         "**/obj": true,
         "**/*.meta": false
     },
-
-    // Search Exclusions
     "search.exclude": {
         "**/Library": true,
         "**/Temp": true,
@@ -32,25 +27,18 @@
         "**/*.unity": true,
         "**/*.prefab": true
     },
-
-    // C# Settings
     "csharp.referencesCodeLens.enabled": true,
     "csharp.maxProjectFileCountForDiagnosticAnalysis": 10000,
-
-    // OmniSharp
     "omnisharp.enableRoslynAnalyzers": true,
     "omnisharp.enableImportCompletion": true,
     "omnisharp.enableDecompilationSupport": true,
-
-    // Editor
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "editor.rulers": [120],
-
-    // Unity Meta Files
     "[meta]": {
         "editor.formatOnSave": false
-    }
+    },
+    "dotnet.defaultSolution": "Project-Seal-Stamp.slnx"
 }

@@ -1,0 +1,8 @@
+# Cozy Village
+This sample features a small, stylized medieval village environment.
+
+## URP
+Load both the `Cozy Village` scene and the `URP Render Setup` scene. Additionally, set the URP pipeline asset to `URP High Fidelity` in the Quality settings.
+
+## HDRP
+Load both the `Cozy Village` scene and the `HDRP Render Setup` scene. Additionally, set the HDRP pipeline asset to `HDRP High Fidelity` in the Quality settings.

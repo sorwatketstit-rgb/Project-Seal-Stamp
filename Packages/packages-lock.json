@@ -7,6 +7,18 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
+    "com.projectdawn.cozy-builder": {
+      "version": "file:com.projectdawn.cozy-builder",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.mathematics": "1.2.6",
+        "com.unity.collections": "1.4.0",
+        "com.unity.burst": "1.6.6",
+        "com.unity.shadergraph": "14.0.11",
+        "com.unity.formats.fbx": "5.1.2"
+      }
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
@@ -117,7 +129,7 @@
     },
     "com.unity.collections": {
       "version": "2.6.5",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {
         "com.unity.burst": "1.8.27",
@@ -176,6 +188,31 @@
       "depth": 1,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.microsoft.gdk": {
+      "version": "1.7.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.microsoft.gdk.discovery": "1.3.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.microsoft.gdk.discovery": {
+      "version": "1.3.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.microsoft.gdk.tools": {
+      "version": "1.7.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.microsoft.gdk.discovery": "1.3.0"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.multiplayer.center": {
@@ -339,7 +376,7 @@
     },
     "com.unity.test-framework.performance": {
       "version": "3.4.0",
-      "depth": 3,
+      "depth": 2,
       "source": "registry",
       "dependencies": {
         "com.unity.test-framework": "1.1.33",

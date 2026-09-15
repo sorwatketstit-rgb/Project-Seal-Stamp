@@ -1,0 +1,10 @@
+﻿<Solution>
+  <Project Path="ProjectDawn.CozyBuilder.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Assembly-CSharp-firstpass.csproj" />
+  <Project Path="Assembly-CSharp-Editor-firstpass.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="ProjectDawn.CozyBuilder.Editor.csproj" />
+  <Project Path="kTools.Mirrors.Runtime.csproj" />
+  <Project Path="kTools.Mirrors.Editor.csproj" />
+</Solution>
