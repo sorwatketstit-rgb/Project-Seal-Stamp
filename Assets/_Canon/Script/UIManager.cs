@@ -194,6 +194,12 @@ namespace SM64
                     _lastMovementState = movement;
                     break;
 
+                case PlayerLeapState:
+                    action = "Leap";
+                    movement = "Airborne";
+                    _lastMovementState = movement;
+                    break;
+
                 default:
                     action = FormatStateName(newState.GetType().Name);
                     movement = "Active";

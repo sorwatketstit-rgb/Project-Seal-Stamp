@@ -6,14 +6,16 @@ namespace SM64
     {
         private float _coyoteTimeCounter;
         private bool _canCoyoteJump;
+        private bool _hasDoubleJumped;
 
         public PlayerAirborneState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
             : base(controller, stateMachine) { }
 
         public void SetupJump(bool consumedAirJump)
         {
-            _canCoyoteJump = false;
+            _canCoyoteJump  = false;
             _coyoteTimeCounter = 0f;
+            _hasDoubleJumped = false;
             if (consumedAirJump)
             {
                 Controller.AirJumpsRemaining--;
@@ -24,6 +26,7 @@ namespace SM64
         {
             _canCoyoteJump = true;
             _coyoteTimeCounter = Controller.coyoteTime;
+            _hasDoubleJumped = false;
         }
 
         public override void Enter()
@@ -61,6 +64,13 @@ namespace SM64
                     return;
                 }
 
+                // Leap — triggered after a double jump when no air jumps remain
+                if (_hasDoubleJumped && Controller.AirJumpsRemaining <= 0)
+                {
+                    StateMachine.ChangeState(Controller.LeapState);
+                    return;
+                }
+
                 // Optimized Mid-Air Double Jump
                 if (Controller.AirJumpsRemaining > 0)
                 {
@@ -76,6 +86,7 @@ namespace SM64
         private void ExecuteDoubleJump()
         {
             Controller.AirJumpsRemaining--;
+            _hasDoubleJumped = true;
 
             // Instant vertical reset provides snappy and predictable double jump height
             Controller.VerticalVelocity = Controller.doubleJumpForce;
@@ -177,6 +188,7 @@ namespace SM64
         {
             _canCoyoteJump = false;
             _coyoteTimeCounter = 0f;
+            _hasDoubleJumped = false;
         }
     }
 }

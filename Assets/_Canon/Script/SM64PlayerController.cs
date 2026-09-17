@@ -38,6 +38,9 @@ namespace SM64
         public float longJumpForce = 8.5f;
         public float backflipForce = 8.0f;
         public float wallJumpForce = 8.0f;
+        public float leapForce = 6.0f;
+        [Tooltip("Multiplier applied to runSpeed for the leap's horizontal impulse.")]
+        public float leapSpeedMultiplier = 1.6f;
         public float gravity = -9.81f;
         public float maxFallSpeed = -20f;
 
@@ -93,6 +96,7 @@ namespace SM64
         public PlayerBackflipState BackflipState { get; private set; }
         public PlayerWallJumpState WallJumpState { get; private set; }
         public PlayerGroundPoundState GroundPoundState { get; private set; }
+        public PlayerLeapState LeapState { get; private set; }
 
         // Movement Sub-State
         public MovementSubState CurrentMovementSubState
@@ -138,6 +142,7 @@ namespace SM64
             BackflipState = new PlayerBackflipState(this, StateMachine);
             WallJumpState = new PlayerWallJumpState(this, StateMachine);
             GroundPoundState = new PlayerGroundPoundState(this, StateMachine);
+            LeapState        = new PlayerLeapState(this, StateMachine);
 
             StateMachine.OnStateChanged += state => activeState = state.GetType().Name;
         }
