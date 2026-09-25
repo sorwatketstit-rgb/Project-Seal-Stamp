@@ -27,10 +27,8 @@
         "**/*.unity": true,
         "**/*.prefab": true
     },
-    "csharp.referencesCodeLens.enabled": true,
     "csharp.maxProjectFileCountForDiagnosticAnalysis": 10000,
     "omnisharp.enableRoslynAnalyzers": true,
-    "omnisharp.enableImportCompletion": true,
     "omnisharp.enableDecompilationSupport": true,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
@@ -40,5 +38,7 @@
     "[meta]": {
         "editor.formatOnSave": false
     },
-    "dotnet.defaultSolution": "Project-Seal-Stamp.slnx"
+    "dotnet.defaultSolution": "Project-Seal-Stamp.slnx",
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "dotnet.codeLens.enableReferencesCodeLens": true
 }
