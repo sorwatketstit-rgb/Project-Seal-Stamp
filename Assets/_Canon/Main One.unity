@@ -2172,7 +2172,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
@@ -2249,6 +2249,8 @@ GameObject:
   - component: {fileID: 1148859647}
   - component: {fileID: 1148859648}
   - component: {fileID: 1148859649}
+  - component: {fileID: 1148859650}
+  - component: {fileID: 1148859651}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2451,6 +2453,77 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65a22ceb8f0b80a4e89bc69090863307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SM64.PlayerInventory
+--- !u!114 &1148859650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148859641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40d78056b462481408e9be5308cb7f5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SM64.PlayerAnimationController
+  playerController: {fileID: 1148859647}
+  animator: {fileID: 1148859651}
+  defaultCrossfadeDuration: 0.12
+  walkSpeedThreshold: 0.15
+  fallVelocityThreshold: -0.5
+  idleStateName: Idle
+  walkStateName: Walk
+  runStateName: Run
+  jumpStateName: Jump
+  doubleJumpStateName: DoubleJump
+  fallStateName: Fall
+  longJumpStateName: LongJump
+  backflipStateName: Backflip
+  wallSlideStateName: WallSlide
+  wallJumpStateName: WallJump
+  ledgeHangStateName: LedgeHang
+  ledgeClimbStateName: LedgeClimb
+  groundPoundStallStateName: GroundPoundStall
+  groundPoundSlamStateName: GroundPoundSlam
+  groundPoundLandStateName: GroundPoundLand
+  leapStateName: Leap
+  speedParam: Speed
+  verticalSpeedParam: VerticalSpeed
+  isGroundedParam: IsGrounded
+  isRunningParam: IsRunning
+  isAirborneParam: IsAirborne
+  isWallSlidingParam: IsWallSliding
+  isLedgeHangingParam: IsLedgeHanging
+  stateHashParam: AnimState
+  enableDebugLogs: 0
+  currentAnimationState: 0
+  isGroundedStatus: 0
+  ruleCorrectionsCount: 0
+  modelRoot: {fileID: 1148859646}
+  maxTiltAngle: 20
+  tiltSpeed: 5
+  tiltRecoverySpeed: 10
+--- !u!95 &1148859651
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148859641}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: c91c40bc79a986c4fab95af9c3aa0e78, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1153969777
 GameObject:
   m_ObjectHideFlags: 0
