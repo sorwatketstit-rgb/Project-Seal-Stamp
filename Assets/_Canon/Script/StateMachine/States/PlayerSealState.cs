@@ -3,17 +3,15 @@ using UnityEngine;
 namespace SM64
 {
     /// <summary>
-    /// Seal State — temporarily transforms the player into a seal model.
+    /// Seal State — temporarily transforms the player into a seal model with visual effects.
     /// Triggered exclusively:
     /// 1. After leaping, if the player does not touch the ground within 1 second.
     /// 2. When pressing Jump while crouching (Crouch + Space bar).
-    /// For now, functions identically to crouching: half speed, no running acceleration, only walk.
-    /// Pressing Crouch again (or releasing Crouch if entered from crouch hold) reverts the player to normal.
+    /// Functions similarly to crouching for movement: half speed, no running acceleration, walk only.
+    /// Pressing Space (Jump) is how the player reverts back to normal (not Ctrl).
     /// </summary>
     public class PlayerSealState : PlayerState
     {
-        private bool _enteredFromCrouchHold;
-
         public PlayerSealState(SM64PlayerController controller, PlayerStateMachine stateMachine)
             : base(controller, stateMachine) { }
 
@@ -22,7 +20,8 @@ namespace SM64
             // [TEMPORARY] Swap to seal model
             Controller.SetVisualModel(PlayerVisualModel.Seal);
 
-            _enteredFromCrouchHold = Input != null && Input.CrouchHeld;
+            // Play transformation particle effect
+            Controller.PlaySealTransformParticle();
 
             if (Controller.IsGrounded())
             {
@@ -34,15 +33,8 @@ namespace SM64
         {
             if (Input == null) return;
 
-            // Revert back from seal if Crouch is pressed again (Ctrl / C)
-            if (Input.CrouchPressed)
-            {
-                RevertToNormal();
-                return;
-            }
-
-            // If entered via holding Crouch + Jump, releasing Crouch after landing returns to normal
-            if (_enteredFromCrouchHold && !Input.CrouchHeld && Controller.IsGrounded())
+            // In seal state, pressing Space (Jump) reverts the player back to normal
+            if (Input.JumpPressed)
             {
                 RevertToNormal();
                 return;
@@ -85,8 +77,6 @@ namespace SM64
 
         public override void Exit()
         {
-            _enteredFromCrouchHold = false;
-
             // [TEMPORARY] Revert model back to default
             Controller.SetVisualModel(PlayerVisualModel.Default);
         }

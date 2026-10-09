@@ -45,6 +45,26 @@ namespace SM64
         [Tooltip("[TEMPORARY] Visual model GameObject shown while in Seal state.")]
         [SerializeField] private GameObject sealModel;
 
+        [Header("Transformation VFX")]
+        [Tooltip("Particle effect (ParticleSystem or Prefab) to play when transforming into the Seal state.")]
+        [SerializeField] private ParticleSystem sealTransformParticle;
+        [Tooltip("Lifetime in seconds before the seal transformation particle effect despawns.")]
+        [SerializeField] private float sealTransformParticleLifetime = 1.5f;
+        [Tooltip("Particle effect (ParticleSystem or Prefab) to play when reverting back from the Seal state.")]
+        [SerializeField] private ParticleSystem sealRevertParticle;
+        [Tooltip("Lifetime in seconds before the seal revert particle effect despawns.")]
+        [SerializeField] private float sealRevertParticleLifetime = 1.5f;
+
+        [Header("Running VFX")]
+        [Tooltip("Particle effect prefab (GameObject or ParticleSystem) spawned periodically while running.")]
+        [SerializeField] private GameObject runParticlePrefab;
+        [Tooltip("Target object/transform where the running particle is spawned. If null, spawns at the player's position.")]
+        [SerializeField] private Transform runParticleSpawnTarget;
+        [Tooltip("Interval in seconds between particle spawns while in the Running state.")]
+        [SerializeField] private float runParticleInterval = 0.5f;
+        [Tooltip("Lifetime in seconds before the spawned running particle despawns.")]
+        [SerializeField] private float runParticleLifetime = 1.0f;
+
         [Header("Running Mechanics")]
         [Tooltip("Continuous hold time (seconds) in 1 direction required to activate running.")]
         public float runActivationTime = 3.0f;
@@ -185,9 +205,9 @@ namespace SM64
             BackflipState = new PlayerBackflipState(this, StateMachine);
             WallJumpState = new PlayerWallJumpState(this, StateMachine);
             GroundPoundState = new PlayerGroundPoundState(this, StateMachine);
-            LeapState        = new PlayerLeapState(this, StateMachine);
-            CrouchingState   = new PlayerCrouchingState(this, StateMachine);
-            SealState        = new PlayerSealState(this, StateMachine);
+            LeapState = new PlayerLeapState(this, StateMachine);
+            CrouchingState = new PlayerCrouchingState(this, StateMachine);
+            SealState = new PlayerSealState(this, StateMachine);
 
             StateMachine.OnStateChanged += state => activeState = state.GetType().Name;
         }
@@ -221,6 +241,64 @@ namespace SM64
             {
                 defaultModel.SetActive(true);
             }
+        }
+
+        public float RunParticleInterval => runParticleInterval;
+        public float RunParticleLifetime => runParticleLifetime;
+        public Transform RunParticleSpawnTarget => runParticleSpawnTarget;
+        public GameObject RunParticlePrefab => runParticlePrefab;
+
+        /// <summary>
+        /// Plays the seal transformation particle effect at the player's position.
+        /// Handles both scene instances and prefab assets, despawning after sealTransformParticleLifetime (1.5s).
+        /// </summary>
+        public void PlaySealTransformParticle()
+        {
+            if (sealTransformParticle == null)
+                return;
+
+            ParticleSystem spawned = Instantiate(sealTransformParticle, transform.position, Quaternion.identity);
+            spawned.gameObject.SetActive(true);
+            spawned.Play();
+            Destroy(spawned.gameObject, sealTransformParticleLifetime);
+        }
+
+        /// <summary>
+        /// Plays the particle effect when reverting back from the Seal state.
+        /// Falls back to sealTransformParticle if sealRevertParticle is not assigned in Inspector.
+        /// Handles both scene instances and prefab assets, despawning after sealRevertParticleLifetime.
+        /// </summary>
+        public void PlaySealRevertParticle()
+        {
+            ParticleSystem particleToPlay = sealRevertParticle != null ? sealRevertParticle : sealTransformParticle;
+            if (particleToPlay == null)
+                return;
+
+            ParticleSystem spawned = Instantiate(particleToPlay, transform.position, Quaternion.identity);
+            spawned.gameObject.SetActive(true);
+            spawned.Play();
+            Destroy(spawned.gameObject, sealRevertParticleLifetime);
+        }
+
+        /// <summary>
+        /// Spawns a running particle effect at the specified target (or player position if null)
+        /// and destroys it after runParticleLifetime (1.0s).
+        /// </summary>
+        public void SpawnRunningParticle()
+        {
+            if (runParticlePrefab == null)
+                return;
+
+            Vector3 spawnPosition = runParticleSpawnTarget != null
+                ? runParticleSpawnTarget.position
+                : transform.position;
+
+            Quaternion spawnRotation = runParticleSpawnTarget != null
+                ? runParticleSpawnTarget.rotation
+                : transform.rotation;
+
+            GameObject spawned = Instantiate(runParticlePrefab, spawnPosition, spawnRotation);
+            Destroy(spawned, runParticleLifetime);
         }
 
         #endregion

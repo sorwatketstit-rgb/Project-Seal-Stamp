@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace SM64
 {
@@ -25,6 +25,9 @@ namespace SM64
         [Header("Collection")]
         [Tooltip("Optional particle effect spawned at collection point.")]
         public GameObject collectEffectPrefab;
+
+        [Tooltip("Lifetime in seconds before the collection particle effect is destroyed.")]
+        public float collectEffectLifetime = 1.5f;
 
         [Tooltip("Optional audio clip played on collection.")]
         public AudioClip collectSound;
@@ -87,7 +90,8 @@ namespace SM64
             // Spawn visual effect
             if (collectEffectPrefab != null)
             {
-                Instantiate(collectEffectPrefab, transform.position, Quaternion.identity);
+                GameObject effect = Instantiate(collectEffectPrefab, transform.position, Quaternion.identity);
+                Destroy(effect, collectEffectLifetime);
             }
 
             // Play sound via a temporary AudioSource at the collect position

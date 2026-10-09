@@ -9,6 +9,8 @@ namespace SM64
     /// </summary>
     public class PlayerRunningState : PlayerGroundedState
     {
+        private float _particleTimer;
+
         public PlayerRunningState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
             : base(controller, stateMachine) { }
 
@@ -16,6 +18,23 @@ namespace SM64
         {
             base.Enter();
             Controller.CurrentMovementSubState = MovementSubState.Running;
+            _particleTimer = 0f;
+
+            // Spawn first running particle upon entering the state
+            Controller.SpawnRunningParticle();
+        }
+
+        public override void LogicUpdate()
+        {
+            base.LogicUpdate();
+
+            // Spawn running particle periodically every runParticleInterval (0.5s)
+            _particleTimer += Time.deltaTime;
+            if (_particleTimer >= Controller.RunParticleInterval)
+            {
+                _particleTimer = 0f;
+                Controller.SpawnRunningParticle();
+            }
         }
 
         public override void PhysicsUpdate()
@@ -44,6 +63,12 @@ namespace SM64
                     StateMachine.ChangeState(Controller.WalkingState);
                 }
             }
+        }
+
+        public override void Exit()
+        {
+            base.Exit();
+            _particleTimer = 0f;
         }
     }
 }
