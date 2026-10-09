@@ -18,6 +18,8 @@ namespace SM64
             // [TEMPORARY] Swap to crouch model
             Controller.SetVisualModel(PlayerVisualModel.Crouch);
 
+            Controller.AirborneState.ResetJumpCount();
+
             if (Controller.IsGrounded())
             {
                 Controller.VerticalVelocity = -2f;

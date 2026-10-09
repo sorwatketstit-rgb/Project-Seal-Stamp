@@ -50,10 +50,16 @@ namespace SM64
         [SerializeField] private ParticleSystem sealTransformParticle;
         [Tooltip("Lifetime in seconds before the seal transformation particle effect despawns.")]
         [SerializeField] private float sealTransformParticleLifetime = 1.5f;
-        [Tooltip("Particle effect (ParticleSystem or Prefab) to play when reverting back from the Seal state.")]
+        [Tooltip("Particle effect (ParticleSystem or Prefab) to play when reverting back from the Seal state. If unassigned, defaults to sealTransformParticle.")]
         [SerializeField] private ParticleSystem sealRevertParticle;
         [Tooltip("Lifetime in seconds before the seal revert particle effect despawns.")]
         [SerializeField] private float sealRevertParticleLifetime = 1.5f;
+
+        [Header("Ground Pound VFX")]
+        [Tooltip("Particle effect (GameObject or ParticleSystem) spawned when ground pound hits the ground.")]
+        [SerializeField] private GameObject groundPoundLandParticle;
+        [Tooltip("Lifetime in seconds before the ground pound impact particle despawns.")]
+        [SerializeField] private float groundPoundLandParticleLifetime = 1.5f;
 
         [Header("Running VFX")]
         [Tooltip("Particle effect prefab (GameObject or ParticleSystem) spawned periodically while running.")]
@@ -278,6 +284,25 @@ namespace SM64
             spawned.gameObject.SetActive(true);
             spawned.Play();
             Destroy(spawned.gameObject, sealRevertParticleLifetime);
+        }
+
+        /// <summary>
+        /// Plays the particle effect when the player slams into the ground during Ground Pound.
+        /// Spawns at the player's ground contact position and despawns after groundPoundLandParticleLifetime.
+        /// </summary>
+        public void PlayGroundPoundLandParticle()
+        {
+            if (groundPoundLandParticle == null)
+                return;
+
+            Vector3 spawnPosition = transform.position;
+            GameObject spawned = Instantiate(groundPoundLandParticle, spawnPosition, Quaternion.identity);
+            ParticleSystem ps = spawned.GetComponent<ParticleSystem>();
+            if (ps != null)
+            {
+                ps.Play();
+            }
+            Destroy(spawned, groundPoundLandParticleLifetime);
         }
 
         /// <summary>

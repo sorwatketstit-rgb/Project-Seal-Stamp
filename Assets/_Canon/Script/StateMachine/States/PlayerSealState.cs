@@ -47,6 +47,7 @@ namespace SM64
             if (Controller.IsGrounded() && Controller.VerticalVelocity <= 0f)
             {
                 Controller.VerticalVelocity = -2f;
+                Controller.AirborneState.ResetJumpCount();
             }
         }
 
@@ -79,6 +80,9 @@ namespace SM64
         {
             // [TEMPORARY] Revert model back to default
             Controller.SetVisualModel(PlayerVisualModel.Default);
+
+            // Play particle effect when reverting back from seal state
+            Controller.PlaySealRevertParticle();
         }
 
         private void RevertToNormal()

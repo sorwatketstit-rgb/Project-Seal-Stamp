@@ -84,6 +84,7 @@ namespace SM64
             // Landing — carry the leap momentum into the running state if speed qualifies
             if (Controller.VerticalVelocity <= 0f && Controller.IsGrounded())
             {
+                Controller.AirborneState.ResetJumpCount();
                 StateMachine.ChangeState(Controller.GetLandingMovementState());
                 return;
             }

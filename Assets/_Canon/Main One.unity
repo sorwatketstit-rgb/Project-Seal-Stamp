@@ -2426,10 +2426,12 @@ MonoBehaviour:
   sealTransformParticleLifetime: 1.5
   sealRevertParticle: {fileID: 584816572452609985, guid: 540b6211121d66b4882fb1616b42c690, type: 3}
   sealRevertParticleLifetime: 1.5
+  groundPoundLandParticle: {fileID: 1789158405713693507, guid: 749077a55fcb03b41a4bbf772768877f, type: 3}
+  groundPoundLandParticleLifetime: 1.5
   runParticlePrefab: {fileID: 7004276584263938394, guid: 90757a113574cea49934b4181e7ba712, type: 3}
   runParticleSpawnTarget: {fileID: 77613750}
-  runParticleInterval: 0.5
-  runParticleLifetime: 1
+  runParticleInterval: 0.15
+  runParticleLifetime: 0.75
   runActivationTime: 1.5
   rapidDeceleration: 28
   airSpeedDecay: 0.8

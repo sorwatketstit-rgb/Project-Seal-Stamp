@@ -57,6 +57,9 @@ namespace SM64
                         _phaseTimer = RecoveryDuration;
                         Controller.VerticalVelocity = -2f;
                         Controller.HorizontalVelocity = Vector3.zero;
+
+                        // Spawn impact particle when ground check detects the ground
+                        Controller.PlayGroundPoundLandParticle();
                     }
                     break;
 

@@ -7,15 +7,18 @@ namespace SM64
         private float _coyoteTimeCounter;
         private bool _canCoyoteJump;
         private bool _hasDoubleJumped;
+        private int _jumpCount;
 
         public PlayerAirborneState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
             : base(controller, stateMachine) { }
 
         public void SetupJump(bool consumedAirJump)
         {
-            _canCoyoteJump  = false;
+            _canCoyoteJump = false;
             _coyoteTimeCounter = 0f;
             _hasDoubleJumped = false;
+            IncrementJumpCount();
+
             if (consumedAirJump)
             {
                 Controller.AirJumpsRemaining--;
@@ -29,6 +32,16 @@ namespace SM64
             _hasDoubleJumped = false;
         }
 
+        public void ResetJumpCount()
+        {
+            _jumpCount = 0;
+        }
+
+        private void IncrementJumpCount()
+        {
+            _jumpCount = Mathf.Min(_jumpCount + 1, 3);
+        }
+
         public override void Enter()
         {
         }
@@ -37,15 +50,15 @@ namespace SM64
         {
             if (Input == null) return;
 
-            // Ground Pound trigger
-            if (Input.CrouchPressed)
+            // Ground Pound trigger only after at least a double jump (jumpCount >= 2)
+            if (Input.CrouchPressed && _jumpCount >= 2)
             {
                 StateMachine.ChangeState(Controller.GroundPoundState);
                 return;
             }
 
-            // Jump handling
-            if (Input.JumpPressed)
+            // Jump handling (max 3 jumps: normal jump, double jump, leap)
+            if (Input.JumpPressed && _jumpCount < 3)
             {
                 // Wall jump priority if near a wall
                 if (Controller.CheckWall(out Vector3 wallNormal))
@@ -61,20 +74,23 @@ namespace SM64
                     _canCoyoteJump = false;
                     _coyoteTimeCounter = 0f;
                     Controller.VerticalVelocity = Controller.jumpForce;
+                    IncrementJumpCount();
                     return;
                 }
 
-                // Leap — triggered after a double jump when no air jumps remain
+                // Leap (3rd jump) — triggered after a double jump when no air jumps remain
                 if (_hasDoubleJumped && Controller.AirJumpsRemaining <= 0)
                 {
+                    IncrementJumpCount();
                     StateMachine.ChangeState(Controller.LeapState);
                     return;
                 }
 
-                // Optimized Mid-Air Double Jump
+                // Optimized Mid-Air Double Jump (2nd jump)
                 if (Controller.AirJumpsRemaining > 0)
                 {
                     ExecuteDoubleJump();
+                    IncrementJumpCount();
                     return;
                 }
 
@@ -156,6 +172,7 @@ namespace SM64
             // Landing check: Evaluates speed threshold (walkSpeed * 1.5) to decide Walking vs Running
             if (Controller.VerticalVelocity <= 0f && Controller.IsGrounded())
             {
+                _jumpCount = 0;
                 StateMachine.ChangeState(Controller.GetLandingMovementState());
             }
         }

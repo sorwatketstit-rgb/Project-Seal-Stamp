@@ -19,6 +19,7 @@ namespace SM64
         public override void Enter()
         {
             Controller.ResetAirJumps();
+            Controller.AirborneState.ResetJumpCount();
             Controller.VerticalVelocity = -2f; // keeps controller glued to ground
             IsLongJumpPrep = false;
             IsBackflipPrep = false;
