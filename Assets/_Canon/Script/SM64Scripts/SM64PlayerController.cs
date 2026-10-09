@@ -8,6 +8,13 @@ namespace SM64
         Running
     }
 
+    public enum PlayerVisualModel
+    {
+        Default,
+        Crouch,
+        Seal
+    }
+
     /// <summary>
     /// SM64-style character controller powered by a modular Finite State Machine.
     /// Handles grounded movement (Walking and Running sub-states), responsive double jumping,
@@ -22,6 +29,21 @@ namespace SM64
         public float acceleration = 12f;
         public float deceleration = 16f;
         public float turnSmoothTime = 0.08f;
+
+        [Header("Crouch & Seal Settings")]
+        [Tooltip("Movement speed multiplier applied to walkSpeed while crouching or in seal state (0.5 = half speed).")]
+        public float crouchSpeedMultiplier = 0.5f;
+        public float CrouchSpeed => walkSpeed * crouchSpeedMultiplier;
+
+        [Header("[TEMPORARY] Visual Models (Inspector Assigned)")]
+        [Tooltip("Default character model / visual GameObject.")]
+        [SerializeField] private GameObject defaultModel;
+
+        [Tooltip("[TEMPORARY] Visual model GameObject shown while in Crouching state.")]
+        [SerializeField] private GameObject crouchModel;
+
+        [Tooltip("[TEMPORARY] Visual model GameObject shown while in Seal state.")]
+        [SerializeField] private GameObject sealModel;
 
         [Header("Running Mechanics")]
         [Tooltip("Continuous hold time (seconds) in 1 direction required to activate running.")]
@@ -97,6 +119,8 @@ namespace SM64
         public PlayerWallJumpState WallJumpState { get; private set; }
         public PlayerGroundPoundState GroundPoundState { get; private set; }
         public PlayerLeapState LeapState { get; private set; }
+        public PlayerCrouchingState CrouchingState { get; private set; }
+        public PlayerSealState SealState { get; private set; }
 
         // Movement Sub-State
         public MovementSubState CurrentMovementSubState
@@ -131,6 +155,25 @@ namespace SM64
                 wallLayerMask = wallLayer != -1 ? (1 << wallLayer) : (1 << 6);
             }
 
+            // Setup temporary models if prefabs are assigned from project assets
+            if (crouchModel != null && !crouchModel.scene.IsValid())
+            {
+                crouchModel = Instantiate(crouchModel, transform);
+                crouchModel.transform.localPosition = Vector3.zero;
+                crouchModel.transform.localRotation = Quaternion.identity;
+                crouchModel.SetActive(false);
+            }
+
+            if (sealModel != null && !sealModel.scene.IsValid())
+            {
+                sealModel = Instantiate(sealModel, transform);
+                sealModel.transform.localPosition = Vector3.zero;
+                sealModel.transform.localRotation = Quaternion.identity;
+                sealModel.SetActive(false);
+            }
+
+            SetVisualModel(PlayerVisualModel.Default);
+
             // Initialize State Machine and concrete states
             StateMachine = new PlayerStateMachine();
             WalkingState = new PlayerWalkingState(this, StateMachine);
@@ -143,9 +186,44 @@ namespace SM64
             WallJumpState = new PlayerWallJumpState(this, StateMachine);
             GroundPoundState = new PlayerGroundPoundState(this, StateMachine);
             LeapState        = new PlayerLeapState(this, StateMachine);
+            CrouchingState   = new PlayerCrouchingState(this, StateMachine);
+            SealState        = new PlayerSealState(this, StateMachine);
 
             StateMachine.OnStateChanged += state => activeState = state.GetType().Name;
         }
+
+        #region Visual Model Swapping (Temporary)
+
+        /// <summary>
+        /// [TEMPORARY] Switches active visual model between Default, Crouch, and Seal models.
+        /// </summary>
+        public void SetVisualModel(PlayerVisualModel modelType)
+        {
+            if (defaultModel != null)
+            {
+                defaultModel.SetActive(modelType == PlayerVisualModel.Default);
+            }
+
+            if (crouchModel != null)
+            {
+                crouchModel.SetActive(modelType == PlayerVisualModel.Crouch);
+            }
+            else if (modelType == PlayerVisualModel.Crouch && defaultModel != null)
+            {
+                defaultModel.SetActive(true);
+            }
+
+            if (sealModel != null)
+            {
+                sealModel.SetActive(modelType == PlayerVisualModel.Seal);
+            }
+            else if (modelType == PlayerVisualModel.Seal && defaultModel != null)
+            {
+                defaultModel.SetActive(true);
+            }
+        }
+
+        #endregion
 
         private void Start()
         {

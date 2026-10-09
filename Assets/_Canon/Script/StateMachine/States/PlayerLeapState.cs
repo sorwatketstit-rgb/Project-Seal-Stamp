@@ -11,12 +11,15 @@ namespace SM64
     {
         private Vector3 _leapDirection;
         private float   _leapSpeed;
+        private float   _airTimer;
 
         public PlayerLeapState(SM64PlayerController controller, PlayerStateMachine stateMachine)
             : base(controller, stateMachine) { }
 
         public override void Enter()
         {
+            _airTimer = 0f;
+
             // No air jumps left after leaping
             Controller.AirJumpsRemaining = 0;
 
@@ -82,6 +85,15 @@ namespace SM64
             if (Controller.VerticalVelocity <= 0f && Controller.IsGrounded())
             {
                 StateMachine.ChangeState(Controller.GetLandingMovementState());
+                return;
+            }
+
+            // Automatically turn into Seal if the player does not touch the ground within 1 second after leaping
+            _airTimer += Time.deltaTime;
+            if (_airTimer >= 1.0f && !Controller.IsGrounded())
+            {
+                StateMachine.ChangeState(Controller.SealState);
+                return;
             }
         }
 

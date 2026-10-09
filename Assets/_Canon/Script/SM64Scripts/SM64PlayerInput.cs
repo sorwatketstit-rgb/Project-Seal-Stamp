@@ -93,12 +93,12 @@ namespace SM64
             JumpHeld = (keyboard != null && keyboard.spaceKey.isPressed) ||
                        (gamepad != null && gamepad.buttonSouth.isPressed);
 
-            CrouchPressed = (keyboard != null && (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.cKey.wasPressedThisFrame)) ||
+            CrouchPressed = (keyboard != null && (keyboard.leftCtrlKey.wasPressedThisFrame || keyboard.rightCtrlKey.wasPressedThisFrame || keyboard.cKey.wasPressedThisFrame)) ||
                             (gamepad != null && gamepad.buttonEast.wasPressedThisFrame);
-            CrouchHeld = (keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.cKey.isPressed)) ||
+            CrouchHeld = (keyboard != null && (keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed || keyboard.cKey.isPressed)) ||
                          (gamepad != null && gamepad.buttonEast.isPressed);
 
-            ActionPressed = (keyboard != null && (keyboard.eKey.wasPressedThisFrame || keyboard.leftCtrlKey.wasPressedThisFrame)) ||
+            ActionPressed = (keyboard != null && keyboard.eKey.wasPressedThisFrame) ||
                             (gamepad != null && gamepad.buttonWest.wasPressedThisFrame);
 #else
             float moveX = Input.GetAxisRaw("Horizontal");
@@ -126,10 +126,10 @@ namespace SM64
             JumpPressed = Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space);
             JumpHeld = Input.GetButton("Jump") || Input.GetKey(KeyCode.Space);
 
-            CrouchPressed = Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.C);
-            CrouchHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.C);
+            CrouchPressed = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl) || Input.GetKeyDown(KeyCode.C);
+            CrouchHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.C);
 
-            ActionPressed = Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.LeftControl);
+            ActionPressed = Input.GetKeyDown(KeyCode.E);
 #endif
         }
     }

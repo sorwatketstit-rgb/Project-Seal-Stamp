@@ -82,6 +82,28 @@ namespace SM64
                     SetMovementState(dynamicMovement);
                 }
             }
+            else if (playerController.StateMachine.CurrentState is PlayerCrouchingState)
+            {
+                float horizontalSpeed = playerController.HorizontalVelocity.magnitude;
+                string dynamicMovement = horizontalSpeed > 0.15f ? "Crouch Walk" : "Crouching";
+
+                if (dynamicMovement != _lastMovementState)
+                {
+                    _lastMovementState = dynamicMovement;
+                    SetMovementState(dynamicMovement);
+                }
+            }
+            else if (playerController.StateMachine.CurrentState is PlayerSealState)
+            {
+                float horizontalSpeed = playerController.HorizontalVelocity.magnitude;
+                string dynamicMovement = horizontalSpeed > 0.15f ? "Seal Walk" : "Seal Idle";
+
+                if (dynamicMovement != _lastMovementState)
+                {
+                    _lastMovementState = dynamicMovement;
+                    SetMovementState(dynamicMovement);
+                }
+            }
         }
 
         private void OnDestroy()
@@ -197,6 +219,18 @@ namespace SM64
                 case PlayerLeapState:
                     action = "Leap";
                     movement = "Airborne";
+                    _lastMovementState = movement;
+                    break;
+
+                case PlayerCrouchingState:
+                    action = "Crouch";
+                    movement = (playerController != null && playerController.HorizontalVelocity.magnitude > 0.15f) ? "Crouch Walk" : "Crouching";
+                    _lastMovementState = movement;
+                    break;
+
+                case PlayerSealState:
+                    action = "Seal";
+                    movement = (playerController != null && playerController.HorizontalVelocity.magnitude > 0.15f) ? "Seal Walk" : "Seal Idle";
                     _lastMovementState = movement;
                     break;
 

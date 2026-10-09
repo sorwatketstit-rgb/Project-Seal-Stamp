@@ -24,7 +24,9 @@ namespace SM64
         GroundPoundStall,
         GroundPoundSlam,
         GroundPoundLand,
-        Leap
+        Leap,
+        Crouch,
+        Seal
     }
 
     /// <summary>
@@ -72,6 +74,8 @@ namespace SM64
         [SerializeField] private string groundPoundSlamStateName = "GroundPoundSlam";
         [SerializeField] private string groundPoundLandStateName = "GroundPoundLand";
         [SerializeField] private string leapStateName = "Leap";
+        [SerializeField] private string crouchStateName = "Crouch";
+        [SerializeField] private string sealStateName = "Seal";
 
         [Header("Animator Parameter Names")]
         [SerializeField] private string speedParam = "Speed";
@@ -268,6 +272,8 @@ namespace SM64
             _stateNameToHash[PlayerAnimationType.GroundPoundSlam] = Animator.StringToHash(groundPoundSlamStateName);
             _stateNameToHash[PlayerAnimationType.GroundPoundLand] = Animator.StringToHash(groundPoundLandStateName);
             _stateNameToHash[PlayerAnimationType.Leap] = Animator.StringToHash(leapStateName);
+            _stateNameToHash[PlayerAnimationType.Crouch] = Animator.StringToHash(crouchStateName);
+            _stateNameToHash[PlayerAnimationType.Seal] = Animator.StringToHash(sealStateName);
 
             _speedHash = Animator.StringToHash(speedParam);
             _vertSpeedHash = Animator.StringToHash(verticalSpeedParam);
@@ -378,6 +384,16 @@ namespace SM64
             if (state is PlayerLeapState)
             {
                 return PlayerAnimationType.Leap;
+            }
+
+            if (state is PlayerCrouchingState)
+            {
+                return PlayerAnimationType.Crouch;
+            }
+
+            if (state is PlayerSealState)
+            {
+                return PlayerAnimationType.Seal;
             }
 
             // Fallback: use grounded status and speed

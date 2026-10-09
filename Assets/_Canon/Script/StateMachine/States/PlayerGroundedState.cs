@@ -35,31 +35,11 @@ namespace SM64
         {
             if (Input == null) return;
 
-            // Crouch prep handling for Long Jump / Backflip
+            // Transition to Crouching State
             if (Input.CrouchPressed)
             {
-                Vector3 moveDir = Controller.GetCameraRelativeInput(Input.MoveInput);
-                if (moveDir.sqrMagnitude > 0.05f)
-                {
-                    IsLongJumpPrep = true;
-                    IsBackflipPrep = false;
-                }
-                else
-                {
-                    IsBackflipPrep = true;
-                    IsLongJumpPrep = false;
-                }
-                PrepTimer = PrepTimeout;
-            }
-
-            if (IsLongJumpPrep || IsBackflipPrep)
-            {
-                PrepTimer -= Time.deltaTime;
-                if (PrepTimer <= 0f || !Input.CrouchHeld)
-                {
-                    IsLongJumpPrep = false;
-                    IsBackflipPrep = false;
-                }
+                StateMachine.ChangeState(Controller.CrouchingState);
+                return;
             }
 
             // Jump trigger
