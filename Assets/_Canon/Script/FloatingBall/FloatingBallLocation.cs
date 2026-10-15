@@ -7,9 +7,9 @@ namespace SM64
     /// It never decides which state the ball is in — it only reads the state from
     /// <see cref="FloatingBallController"/> and moves the ball accordingly:
     /// - HasPlayer: stays in place (optional hover bobbing).
-    /// - Moving:    flies in 3D toward the player.
+    /// - Moving:    flies in 3D toward the player, turning to face them.
     /// - Kicked:    records origin → travels to the wind-up GameObject → is shot as a physics-driven
-    ///              projectile (keeps its own momentum) → arcs back to the recorded origin.
+    ///              projectile (keeps its own momentum) → arcs back to the recorded origin (facing the player).
     /// When the kick finishes it reports back to the controller, which then changes the state.
     /// </summary>
     [RequireComponent(typeof(FloatingBallController))]
@@ -42,6 +42,13 @@ namespace SM64
         [Tooltip("If true, uses smooth damping. If false, uses constant linear speed.")]
         [SerializeField] private bool useSmoothMovement = true;
 
+        [Header("Facing")]
+        [Tooltip("Pivot that marks the FRONT of the ball (an empty child object). The ball turns so this point faces the player while Moving and while returning from a kick. If empty, the transform's forward is used.")]
+        [SerializeField] private Transform frontPoint;
+
+        [Tooltip("How fast the ball turns toward the player, in degrees per second.")]
+        [SerializeField] private float turnSpeed = 540f;
+
         [Header("Idle Hover / Floating VFX")]
         [SerializeField] private bool enableHoverBobbing = true;
         [SerializeField] private float hoverAmplitude = 0.2f;
@@ -69,6 +76,9 @@ namespace SM64
 
         [Tooltip("Object to Enable when kick")]
         [SerializeField] private GameObject SmokeObject;
+
+        [Tooltip("Effect to Disable when kick")]
+        [SerializeField] private GameObject PropellerEffect;
 
         [Tooltip("Launch pitch above the horizontal, in degrees. 0 = flat shot.")]
         [SerializeField] private float shootUpAngle = 0f;
@@ -184,6 +194,7 @@ namespace SM64
             }
 
             ApplyHoverBobbing();
+            UpdateFacing();
         }
 
         // ───────────────────────── Following ─────────────────────────
@@ -200,6 +211,39 @@ namespace SM64
             {
                 _basePosition = Vector3.MoveTowards(_basePosition, destination, moveSpeed * Time.deltaTime);
             }
+        }
+
+        // ───────────────────────── Facing ─────────────────────────
+
+        /// <summary>
+        /// Turns the ball so its front faces the player — only while Moving and while arcing back
+        /// after a kick. In every other situation the rotation is left alone.
+        /// </summary>
+        private void UpdateFacing()
+        {
+            bool shouldFace =
+                _controller.CurrentStage == BallStage.Moving ||
+                (_controller.CurrentStage == BallStage.Kicked && _kickActive && _kickPhase == KickPhase.Return);
+
+            if (!shouldFace || !HasTarget) return;
+
+            Vector3 toTarget = TargetPosition - transform.position;
+            if (toTarget.sqrMagnitude < 0.0001f) return;
+
+            // Smallest rotation that swings the current front direction onto the player direction.
+            Quaternion desired = Quaternion.FromToRotation(GetFrontDirection(), toTarget.normalized) * transform.rotation;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, desired, turnSpeed * Time.deltaTime);
+        }
+
+        /// <summary>World direction from the ball's pivot to its Front Point (falls back to transform.forward).</summary>
+        private Vector3 GetFrontDirection()
+        {
+            if (frontPoint != null)
+            {
+                Vector3 dir = frontPoint.position - transform.position;
+                if (dir.sqrMagnitude > 0.0001f) return dir.normalized;
+            }
+            return transform.forward;
         }
 
         // ───────────────────────── Kick sequence ─────────────────────────
@@ -241,6 +285,7 @@ namespace SM64
             Vector3 windUpPos = GetWindUpPosition(); // tracked live
             float t = Mathf.Clamp01(_phaseTimer / Mathf.Max(0.0001f, windUpDuration));
             float smooth = 1f - (1f - t) * (1f - t); // ease-out
+            if (PropellerEffect != null) PropellerEffect.SetActive(false);
 
             _basePosition = t >= 1f ? windUpPos : Vector3.Lerp(_windUpStart, windUpPos, smooth);
 
@@ -296,6 +341,7 @@ namespace SM64
 
         private void BeginReturn()
         {
+            if (PropellerEffect != null) PropellerEffect.SetActive(true);
             _returnStart = _basePosition;
             _returnControl = (_returnStart + _kickOrigin) * 0.5f
                              + Vector3.up * returnArcHeight
@@ -371,6 +417,14 @@ namespace SM64
                 Vector3 center = Application.isPlaying ? _basePosition : transform.position;
                 Gizmos.color = Color.gray;
                 Gizmos.DrawLine(center, playerTarget.position + targetOffset);
+            }
+
+            // Front direction
+            if (frontPoint != null)
+            {
+                Gizmos.color = Color.blue;
+                Gizmos.DrawLine(transform.position, frontPoint.position);
+                Gizmos.DrawWireSphere(frontPoint.position, 0.08f);
             }
 
             // Wind-up point
