@@ -23,6 +23,9 @@ namespace SM64
             // Zero out velocities during stall
             Controller.HorizontalVelocity = Vector3.zero;
             Controller.VerticalVelocity = 0f;
+
+            // Reset jump counter so the player must build up jumps again after a ground pound
+            Controller.AirborneState.ResetJumpCount();
         }
 
         public override void HandleInput()
