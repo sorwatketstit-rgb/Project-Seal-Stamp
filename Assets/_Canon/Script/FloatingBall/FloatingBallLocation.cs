@@ -67,6 +67,9 @@ namespace SM64
         [Tooltip("Initial launch speed (units/second). This becomes the ball's momentum.")]
         [SerializeField] private float shootSpeed = 25f;
 
+        [Tooltip("Object to Enable when kick")]
+        [SerializeField] private GameObject SmokeObject;
+
         [Tooltip("Launch pitch above the horizontal, in degrees. 0 = flat shot.")]
         [SerializeField] private float shootUpAngle = 0f;
 
@@ -256,6 +259,7 @@ namespace SM64
             _shotTimer = 0f;
             _phaseTimer = 0f;
             _kickPhase = KickPhase.Shoot;
+            if (SmokeObject != null) SmokeObject.SetActive(true);
 
             _controller.NotifyKickShot();
         }
@@ -312,6 +316,7 @@ namespace SM64
                 _basePosition = _kickOrigin;
                 _shotVelocity = Vector3.zero;
                 _kickActive = false;
+                if (SmokeObject != null) SmokeObject.SetActive(false);
                 _controller.NotifyKickFinished(); // controller decides the next state
             }
         }
