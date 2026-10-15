@@ -2281,6 +2281,7 @@ GameObject:
   - component: {fileID: 1148859648}
   - component: {fileID: 1148859649}
   - component: {fileID: 1148859650}
+  - component: {fileID: 1148859652}
   - component: {fileID: 1148859651}
   m_Layer: 0
   m_Name: Player
@@ -2396,6 +2397,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 77613750}
+  - {fileID: 1358175479}
   - {fileID: 1608126973}
   - {fileID: 1686824954}
   - {fileID: 1999949840}
@@ -2574,6 +2576,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1148859652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148859641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae0f679f842ac0d41808d3726fcc53f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SM64.BallKicking
+  ball: {fileID: 1846945466}
+  facingSource: {fileID: 0}
+  kickKey: 304
+  pollLegacyInput: 1
 --- !u!1 &1153969777
 GameObject:
   m_ObjectHideFlags: 0
@@ -2831,6 +2849,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1222124152}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1358175478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1358175479}
+  m_Layer: 0
+  m_Name: FrontPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1358175479
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1358175478}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.626}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1148859646}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1425437388
 GameObject:
   m_ObjectHideFlags: 0
@@ -3253,6 +3302,7 @@ GameObject:
   - component: {fileID: 1846945463}
   - component: {fileID: 1846945462}
   - component: {fileID: 1846945466}
+  - component: {fileID: 1846945467}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -3365,18 +3415,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe4dad86597b6854ba5cad46057b879c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SM64.FloatingBallController
-  playerTag: Player
-  playerTarget: {fileID: 1148859646}
-  targetOffset: {x: 0, y: 1.2, z: 0}
-  detectionRadius: 10
+  location: {fileID: 1846945467}
+  detectionRadius: 7.5
   stopDistance: 5
-  moveSpeed: 5
-  smoothTime: 0.35
-  useSmoothMovement: 1
-  enableHoverBobbing: 1
-  hoverAmplitude: 0.15
-  hoverFrequency: 0.5
   currentStage: 0
+  collectableLayers:
+    serializedVersion: 2
+    m_Bits: 128
   onStageChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -3386,6 +3431,55 @@ MonoBehaviour:
   onArrivedAtPlayer:
     m_PersistentCalls:
       m_Calls: []
+  onKicked:
+    m_PersistentCalls:
+      m_Calls: []
+  onKickShoot:
+    m_PersistentCalls:
+      m_Calls: []
+  onKickReturned:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1846945467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1846945461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52555afa2ca863e43af38df5412a362f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SM64.FloatingBallLocation
+  playerTag: Player
+  playerTarget: {fileID: 1148859646}
+  targetOffset: {x: 0, y: 1.2, z: 0}
+  moveSpeed: 7
+  smoothTime: 0.35
+  useSmoothMovement: 1
+  enableHoverBobbing: 1
+  hoverAmplitude: 0.2
+  hoverFrequency: 0.5
+  windUpPoint: {fileID: 1358175479}
+  windUpDuration: 0.25
+  windUpHoldTime: 0.1
+  fallbackWindUpBack: 1.5
+  fallbackWindUpHeight: 2.5
+  shootSpeed: 50
+  shootUpAngle: 7.5
+  shotGravityScale: 2.5
+  shotDrag: 0.1
+  maxShotTime: 1.5
+  minShotSpeed: 2
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  ballRadius: 0.3
+  shotBounciness: 0.6
+  returnArcHeight: 5
+  returnDuration: 1.5
+  returnMomentumInfluence: 0.25
 --- !u!1 &1885438152
 GameObject:
   m_ObjectHideFlags: 0

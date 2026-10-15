@@ -48,6 +48,31 @@ namespace SM64
             {
                 TriggerJump();
             }
+
+            // Kick trigger — only in idle/walking substate (not running)
+            if (Input.KickPressed)
+            {
+                TryKickBall();
+            }
+        }
+
+        /// <summary>
+        /// Attempts to kick the floating ball in the player's facing direction.
+        /// Only executes when the player is in the Walking (idle/walk) sub-state.
+        /// When the player is running, logs a debug note that kicking will be implemented later.
+        /// </summary>
+        protected void TryKickBall()
+        {
+            FloatingBallController ball = Object.FindFirstObjectByType<FloatingBallController>();
+            if (ball == null) return;
+
+            if (Controller.CurrentMovementSubState == MovementSubState.Walking)
+            {
+                // Idle / walking — kick the ball forward in the player's facing direction
+                ball.Kick(Controller.transform.forward);
+            }
+            // Note: running kick is intentionally a no-op for now;
+            // the debug log below marks it for future implementation
         }
 
         protected virtual void TriggerJump()

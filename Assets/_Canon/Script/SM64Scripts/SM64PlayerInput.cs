@@ -20,6 +20,7 @@ namespace SM64
         public bool CrouchPressed { get; private set; }
         public bool CrouchHeld { get; private set; }
         public bool ActionPressed { get; private set; }
+        public bool KickPressed { get; private set; }
 
         private void Update()
         {
@@ -100,6 +101,9 @@ namespace SM64
 
             ActionPressed = (keyboard != null && keyboard.eKey.wasPressedThisFrame) ||
                             (gamepad != null && gamepad.buttonWest.wasPressedThisFrame);
+
+            KickPressed = (keyboard != null && (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.rightShiftKey.wasPressedThisFrame)) ||
+                          (gamepad != null && gamepad.rightTrigger.wasPressedThisFrame);
 #else
             float moveX = Input.GetAxisRaw("Horizontal");
             float moveY = Input.GetAxisRaw("Vertical");
@@ -130,6 +134,8 @@ namespace SM64
             CrouchHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.C);
 
             ActionPressed = Input.GetKeyDown(KeyCode.E);
+
+            KickPressed = Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift);
 #endif
         }
     }

@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Events;
-
 namespace SM64
 {
     /// <summary>
@@ -9,94 +8,60 @@ namespace SM64
     public enum BallStage
     {
         HasPlayer,
-        Moving
+        Moving,
+        /// <summary>
+        /// Ball is executing the kick sequence (wind-up → projectile shot → arc return).
+        /// </summary>
+        Kicked
     }
 
     /// <summary>
-    /// Floating companion ball that hovers around the player.
-    /// - Stage 'HasPlayer': Ball stays stationary (or hovers in place) as long as the player is inside its spherical range.
-    /// - When the player exits the spherical range, state changes to 'Moving'.
-    /// - Stage 'Moving': Ball flies in 3D (all 3 axes) toward the player until it reaches 'stopDistance' (default 5 units),
-    ///   at which point it switches back to 'HasPlayer'.
+    /// State manager for the floating ball. It decides WHICH stage the ball is in and raises events,
+    /// but it never moves the ball — all positional control lives in <see cref="FloatingBallLocation"/>.
+    /// - HasPlayer: ball is idle. If the player leaves 'detectionRadius', switches to Moving.
+    /// - Moving:    ball is following the player. Once within 'stopDistance', switches back to HasPlayer.
+    /// - Kicked:    entered via <see cref="RequestKick"/>; left when the location script reports the kick finished.
     /// </summary>
     public class FloatingBallController : MonoBehaviour
     {
-        [Header("Targeting")]
-        [Tooltip("Tag used to find the player GameObject if no target is assigned.")]
-        [SerializeField] private string playerTag = "Player";
-
-        [Tooltip("Direct reference to player transform. If left empty, will search by tag.")]
-        [SerializeField] private Transform playerTarget;
-
-        [Tooltip("Offset from the player's pivot (e.g. chest/center height).")]
-        [SerializeField] private Vector3 targetOffset = new Vector3(0f, 1.2f, 0f);
+        [Header("References")]
+        [Tooltip("Script that owns the ball's position. Found on this GameObject if left empty.")]
+        [SerializeField] private FloatingBallLocation location;
 
         [Header("Range & Distances")]
-        [Tooltip("Spherical detection range radius. If player exits this radius while in HasPlayer stage, ball starts moving.")]
+        [Tooltip("If the player is further than this from the ball while in HasPlayer, the ball starts moving.")]
         [SerializeField] private float detectionRadius = 10f;
 
-        [Tooltip("Distance from player at which the ball stops moving and switches back to HasPlayer stage.")]
+        [Tooltip("Distance from the player at which the ball stops moving and switches back to HasPlayer.")]
         [SerializeField] private float stopDistance = 5f;
-
-        [Header("Flight Movement")]
-        [Tooltip("Maximum flight speed in units per second.")]
-        [SerializeField] private float moveSpeed = 7f;
-
-        [Tooltip("Acceleration / smoothing time for smooth flight damping.")]
-        [SerializeField] private float smoothTime = 0.35f;
-
-        [Tooltip("If true, uses smooth damping. If false, uses constant linear speed.")]
-        [SerializeField] private bool useSmoothMovement = true;
-
-        [Header("Idle Hover / Floating VFX")]
-        [Tooltip("Enable subtle floating / bobbing motion when hovering.")]
-        [SerializeField] private bool enableHoverBobbing = true;
-
-        [Tooltip("Hover bobbing vertical amplitude.")]
-        [SerializeField] private float hoverAmplitude = 0.2f;
-
-        [Tooltip("Hover bobbing frequency (cycles per second).")]
-        [SerializeField] private float hoverFrequency = 1.5f;
 
         [Header("Debug & State")]
         [SerializeField] private BallStage currentStage = BallStage.HasPlayer;
+
+        [Header("Collection")]
+        [Tooltip("Layer mask for collectable items like letters.")]
+        [SerializeField] private LayerMask collectableLayers;
 
         [Header("Events")]
         public UnityEvent<BallStage> onStageChanged;
         public UnityEvent onStartMoving;
         public UnityEvent onArrivedAtPlayer;
+        public UnityEvent onKicked;       // kick sequence requested/started
+        public UnityEvent onKickShoot;    // ball launched from the wind-up point
+        public UnityEvent onKickReturned; // ball is back at its origin
 
-        // Runtime variables
-        private Vector3 _currentVelocity;
-        private Vector3 _basePosition;
-        private float _hoverTimer;
-
-        /// <summary>
-        /// Current state/stage of the floating ball.
-        /// </summary>
         public BallStage CurrentStage => currentStage;
+        public bool IsKicked => currentStage == BallStage.Kicked;
 
-        /// <summary>
-        /// Target transform being followed.
-        /// </summary>
-        public Transform PlayerTarget
-        {
-            get => playerTarget;
-            set => playerTarget = value;
-        }
+        /// <summary>Horizontal facing direction supplied with the most recent kick request.</summary>
+        public Vector3 KickForward { get; private set; } = Vector3.forward;
 
-        /// <summary>
-        /// Detection radius around the ball.
-        /// </summary>
         public float DetectionRadius
         {
             get => detectionRadius;
             set => detectionRadius = Mathf.Max(0.1f, value);
         }
 
-        /// <summary>
-        /// Stopping distance to player.
-        /// </summary>
         public float StopDistance
         {
             get => stopDistance;
@@ -105,14 +70,11 @@ namespace SM64
 
         private void Awake()
         {
-            _basePosition = transform.position;
-            _hoverTimer = Random.Range(0f, 2f * Mathf.PI);
+            if (location == null) location = GetComponent<FloatingBallLocation>();
         }
 
         private void Start()
         {
-            FindPlayerIfNeeded();
-            // Validate stop distance is not larger than detection radius for expected behavior
             if (stopDistance > detectionRadius)
             {
                 Debug.LogWarning($"[FloatingBallController] Stop distance ({stopDistance}) is greater than detection radius ({detectionRadius}). Clamping stop distance to detection radius.", this);
@@ -122,87 +84,27 @@ namespace SM64
 
         private void Update()
         {
-            FindPlayerIfNeeded();
+            if (location == null || !location.HasTarget) return;
 
-            if (playerTarget == null)
-            {
-                return;
-            }
-
-            Vector3 destination = playerTarget.position + targetOffset;
-            float distanceToPlayer = Vector3.Distance(_basePosition, destination);
+            float distance = location.DistanceToTarget;
 
             switch (currentStage)
             {
                 case BallStage.HasPlayer:
-                    HandleHasPlayerStage(distanceToPlayer);
+                    if (distance > detectionRadius) SetStage(BallStage.Moving);
                     break;
 
                 case BallStage.Moving:
-                    HandleMovingStage(destination, distanceToPlayer);
+                    if (distance <= stopDistance) SetStage(BallStage.HasPlayer);
+                    break;
+
+                case BallStage.Kicked:
+                    // Stage is left only via NotifyKickFinished().
                     break;
             }
-
-            ApplyHoverBobbing();
         }
 
-        /// <summary>
-        /// Logic during HasPlayer stage: remains stationary until player exits spherical range.
-        /// </summary>
-        private void HandleHasPlayerStage(float distanceToPlayer)
-        {
-            // If the player leaves the spherical detection range, switch to Moving stage
-            if (distanceToPlayer > detectionRadius)
-            {
-                SetStage(BallStage.Moving);
-            }
-        }
-
-        /// <summary>
-        /// Logic during Moving stage: flies in 3D toward player until distance reaches stopDistance.
-        /// </summary>
-        private void HandleMovingStage(Vector3 destination, float distanceToPlayer)
-        {
-            // Fly toward destination in 3D (X, Y, Z axes)
-            if (useSmoothMovement)
-            {
-                _basePosition = Vector3.SmoothDamp(_basePosition, destination, ref _currentVelocity, smoothTime, moveSpeed);
-            }
-            else
-            {
-                _basePosition = Vector3.MoveTowards(_basePosition, destination, moveSpeed * Time.deltaTime);
-            }
-
-            // Recalculate distance after movement
-            float currentDist = Vector3.Distance(_basePosition, destination);
-
-            // Once within stop distance (e.g. 5 units), return to HasPlayer stage
-            if (currentDist <= stopDistance)
-            {
-                SetStage(BallStage.HasPlayer);
-            }
-        }
-
-        /// <summary>
-        /// Applies optional subtle sinusoidal hover bobbing on top of the base position.
-        /// </summary>
-        private void ApplyHoverBobbing()
-        {
-            if (enableHoverBobbing)
-            {
-                _hoverTimer += Time.deltaTime * hoverFrequency * Mathf.PI * 2f;
-                float yOffset = Mathf.Sin(_hoverTimer) * hoverAmplitude;
-                transform.position = _basePosition + new Vector3(0f, yOffset, 0f);
-            }
-            else
-            {
-                transform.position = _basePosition;
-            }
-        }
-
-        /// <summary>
-        /// Changes state and triggers associated events.
-        /// </summary>
+        /// <summary>Changes state and triggers associated events.</summary>
         public void SetStage(BallStage newStage)
         {
             if (currentStage == newStage) return;
@@ -216,61 +118,85 @@ namespace SM64
             }
             else if (currentStage == BallStage.HasPlayer)
             {
-                _currentVelocity = Vector3.zero;
                 onArrivedAtPlayer?.Invoke();
             }
         }
 
         /// <summary>
-        /// Tries to find the GameObject with the specified playerTag if target is missing.
+        /// Asks the ball to perform a kick. Returns false if it is already kicking.
+        /// Called by <see cref="BallKicking"/>. The actual movement is carried out by <see cref="FloatingBallLocation"/>.
         /// </summary>
-        private void FindPlayerIfNeeded()
+        public bool RequestKick(Vector3 playerForward)
         {
-            if (playerTarget != null && playerTarget.gameObject.activeInHierarchy)
-            {
-                return;
-            }
+            if (currentStage == BallStage.Kicked) return false;
 
-            if (!string.IsNullOrEmpty(playerTag))
-            {
-                GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
-                if (playerObj != null)
-                {
-                    playerTarget = playerObj.transform;
-                }
-            }
+            playerForward.y = 0f;
+            KickForward = playerForward.sqrMagnitude < 0.001f ? Vector3.forward : playerForward.normalized;
+
+            onKicked?.Invoke();
+
+            // Enter Kicked from any stage
+            currentStage = BallStage.Kicked;
+            onStageChanged?.Invoke(currentStage);
+            return true;
         }
 
         /// <summary>
-        /// Synchronizes the internal base position if the transform was moved externally.
+        /// Backwards-compatible alias for <see cref="RequestKick"/> so existing callers
+        /// (e.g. PlayerGroundedState) keep working.
         /// </summary>
-        public void SetPosition(Vector3 newPosition)
+        public void Kick(Vector3 playerForward)
         {
-            _basePosition = newPosition;
-            transform.position = newPosition;
-            _currentVelocity = Vector3.zero;
+            RequestKick(playerForward);
+        }
+
+        /// <summary>Called by the location script when the ball launches from the wind-up point.</summary>
+        public void NotifyKickShot()
+        {
+            if (currentStage == BallStage.Kicked) onKickShoot?.Invoke();
+        }
+
+        /// <summary>Called by the location script once the ball is back at its origin.</summary>
+        public void NotifyKickFinished()
+        {
+            if (currentStage != BallStage.Kicked) return;
+
+            onKickReturned?.Invoke();
+            SetStage(BallStage.HasPlayer);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            // Check if the collided object matches the collectable layer mask or tag
+            if (((1 << other.gameObject.layer) & collectableLayers) != 0 || other.CompareTag("Letter"))
+            {
+                MailLetterCollectable letter = other.GetComponent<MailLetterCollectable>();
+                if (letter != null && letter.CanBeCollected)
+                {
+                    letter.Collect();
+
+                    if (CollectableManager.Instance != null)
+                    {
+                        CollectableManager.Instance.AddLetters(1);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[FloatingBallController] CollectableManager.Instance is null!");
+                    }
+                }
+            }
         }
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            Vector3 center = Application.isPlaying ? _basePosition : transform.position;
+            Vector3 center = (Application.isPlaying && location != null) ? location.BasePosition : transform.position;
 
-            // Draw Detection Radius Sphere (Spherical range)
             Gizmos.color = (currentStage == BallStage.HasPlayer) ? new Color(0.2f, 1f, 0.4f, 0.25f) : new Color(1f, 0.8f, 0.2f, 0.25f);
             Gizmos.DrawWireSphere(center, detectionRadius);
 
-            // Draw Stop Distance Sphere
             Gizmos.color = new Color(0.2f, 0.6f, 1f, 0.35f);
             Gizmos.DrawWireSphere(center, stopDistance);
-
-            // Draw flight path line to target
-            if (playerTarget != null)
-            {
-                Vector3 dest = playerTarget.position + targetOffset;
-                Gizmos.color = (currentStage == BallStage.Moving) ? Color.yellow : Color.gray;
-                Gizmos.DrawLine(center, dest);
-            }
         }
 #endif
     }

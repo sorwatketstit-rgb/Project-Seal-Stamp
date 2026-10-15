@@ -24,6 +24,17 @@ namespace SM64
             Controller.SpawnRunningParticle();
         }
 
+        public override void HandleInput()
+        {
+            base.HandleInput();
+
+            // Kick while running — placeholder for future implementation
+            if (Input != null && Input.KickPressed)
+            {
+                Debug.Log("[BallKick] Kick pressed while RUNNING — running kick not yet implemented, will be added in future.");
+            }
+        }
+
         public override void LogicUpdate()
         {
             base.LogicUpdate();
