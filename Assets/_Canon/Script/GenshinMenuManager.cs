@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -14,7 +15,7 @@ namespace SM64
     /// - Disables player actions while allowing menu navigation with mouse cursor.
     /// - Draws 4 candidate dots around the player, removes any that collide with obstacles,
     ///   and smoothly moves the camera to one of the remaining valid dots (swapping position each time).
-    /// - Enables/disables a Menu UI object.
+    /// - Enables/disables a Menu UI object with an adjustable close delay.
     /// </summary>
     public class GenshinMenuManager : MonoBehaviour
     {
@@ -51,6 +52,9 @@ namespace SM64
         [Tooltip("Time in seconds for camera to travel to/from the menu position.")]
         [SerializeField] private float transitionDuration = 0.45f;
 
+        [Tooltip("Delay in seconds before deactivating the menu UI object when closing the menu.")]
+        [SerializeField] private float menuCloseUIDelay = 0.15f;
+
         [Header("Debug & Gizmos")]
         [Tooltip("Draw visual gizmos showing the 4 dots and their collision statuses in the Scene view.")]
         [SerializeField] private bool showGizmos = true;
@@ -70,6 +74,7 @@ namespace SM64
         private int _lastChosenDotIndex = -1;
         private List<DotCandidate> _latestEvaluatedDots = new List<DotCandidate>();
         private Vector3 _currentChosenDotPosition;
+        private Coroutine _menuCloseCoroutine;
 
         private void Awake()
         {
@@ -166,6 +171,13 @@ namespace SM64
             if (isMenuOpen) return;
             isMenuOpen = true;
 
+            // Stop any ongoing close coroutine if re-opening quickly
+            if (_menuCloseCoroutine != null)
+            {
+                StopCoroutine(_menuCloseCoroutine);
+                _menuCloseCoroutine = null;
+            }
+
             // Block player gameplay inputs and free cursor for UI navigation
             if (playerInput != null)
             {
@@ -182,6 +194,10 @@ namespace SM64
             if (menuUIObject != null)
             {
                 menuUIObject.SetActive(true);
+            }
+            
+            if (menuCloseObject != null)
+            {
                 menuCloseObject.SetActive(false);
             }
 
@@ -199,19 +215,18 @@ namespace SM64
 
         /// <summary>
         /// Closes the menu:
-        /// 1. Disables the menu UI object.
-        /// 2. Transitions camera back to its saved gameplay position.
-        /// 3. Restores player action inputs.
+        /// 1. Transitions camera back to its saved gameplay position.
+        /// 2. Restores player action inputs.
+        /// 3. Waits for adjustable delay before disabling the menu UI object.
         /// </summary>
         public void CloseMenu()
         {
             if (!isMenuOpen) return;
             isMenuOpen = false;
 
-            // Disable Menu UI object
-            if (menuUIObject != null)
+            // Enable menu close object if assigned
+            if (menuCloseObject != null)
             {
-                menuUIObject.SetActive(false);
                 menuCloseObject.SetActive(true);
             }
 
@@ -226,6 +241,28 @@ namespace SM64
             {
                 playerInput.IsInputBlocked = false;
             }
+
+            // Start delayed coroutine to turn off Menu UI
+            if (_menuCloseCoroutine != null)
+            {
+                StopCoroutine(_menuCloseCoroutine);
+            }
+            _menuCloseCoroutine = StartCoroutine(DelayedCloseMenuUI());
+        }
+
+        private IEnumerator DelayedCloseMenuUI()
+        {
+            if (menuCloseUIDelay > 0f)
+            {
+                yield return new WaitForSeconds(menuCloseUIDelay);
+            }
+
+            if (menuUIObject != null)
+            {
+                menuUIObject.SetActive(false);
+            }
+
+            _menuCloseCoroutine = null;
         }
 
         /// <summary>
