@@ -10,6 +10,23 @@ namespace SM64
         [Header("Controls Sensitivity")]
         public float lookSensitivity = 1.5f;
 
+        [Header("Input Blocking")]
+        [Tooltip("When enabled, all movement, camera look, and action inputs are blocked and the mouse cursor is freed.")]
+        [SerializeField] private bool isInputBlocked = false;
+
+        public bool IsInputBlocked
+        {
+            get => isInputBlocked;
+            set
+            {
+                isInputBlocked = value;
+                if (isInputBlocked)
+                {
+                    ResetInputs();
+                }
+            }
+        }
+
         // Vector Input values
         public Vector2 MoveInput { get; private set; }
         public Vector2 LookInput { get; private set; }
@@ -27,8 +44,27 @@ namespace SM64
             ReadInput();
         }
 
+        public void ResetInputs()
+        {
+            MoveInput = Vector2.zero;
+            LookInput = Vector2.zero;
+            JumpPressed = false;
+            JumpHeld = false;
+            CrouchPressed = false;
+            CrouchHeld = false;
+            ActionPressed = false;
+            KickPressed = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         private void ReadInput()
         {
+            if (isInputBlocked)
+            {
+                ResetInputs();
+                return;
+            }
 #if ENABLE_INPUT_SYSTEM
             var keyboard = Keyboard.current;
             var gamepad = Gamepad.current;

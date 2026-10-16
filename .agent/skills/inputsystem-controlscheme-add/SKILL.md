@@ -26,8 +26,8 @@ Loads the asset, adds the control scheme via `AddControlScheme`, registers each 
 unity-mcp-cli run-tool inputsystem-controlscheme-add --input '{
   "assetPath": "string_value",
   "schemeName": "string_value",
-  "requiredDevices": "string_value",
-  "optionalDevices": "string_value"
+  "requiredDevices": [],
+  "optionalDevices": []
 }'
 ```
 
@@ -55,8 +55,8 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 |------|------|----------|-------------|
 | `assetPath` | `string` | Yes | 'Assets/'-rooted path to the existing '.inputactions' asset. |
 | `schemeName` | `string` | Yes | Unique name of the new control scheme. |
-| `requiredDevices` | `any` | No | Optional required device control paths (e.g. '<Gamepad>'). All must be present for the scheme to be usable. |
-| `optionalDevices` | `any` | No | Optional optional-device control paths (e.g. '<Mouse>'). |
+| `requiredDevices` | `array` | No | Optional required device control paths (e.g. '<Gamepad>'). All must be present for the scheme to be usable. |
+| `optionalDevices` | `array` | No | Optional optional-device control paths (e.g. '<Mouse>'). |
 
 ### Input JSON Schema
 
@@ -71,14 +71,12 @@ Read the /unity-initial-setup skill for detailed installation instructions.
       "type": "string"
     },
     "requiredDevices": {
-      "$ref": "#/$defs/System.String-1"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "optionalDevices": {
-      "$ref": "#/$defs/System.String-1"
-    }
-  },
-  "$defs": {
-    "System.String-1": {
       "type": "array",
       "items": {
         "type": "string"
@@ -94,56 +92,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ControlSchemeAddResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ControlSchemeAddResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the modified asset."
-        },
-        "schemeName": {
-          "type": "string",
-          "description": "Name of the added control scheme."
-        },
-        "requiredDeviceCount": {
-          "type": "integer",
-          "description": "Number of required devices registered."
-        },
-        "optionalDeviceCount": {
-          "type": "integer",
-          "description": "Number of optional devices registered."
-        },
-        "controlSchemeCount": {
-          "type": "integer",
-          "description": "Total number of control schemes in the asset."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "requiredDeviceCount",
-        "optionalDeviceCount",
-        "controlSchemeCount",
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

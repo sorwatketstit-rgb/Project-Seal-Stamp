@@ -74,46 +74,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ActionMapAddResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ActionMapAddResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the modified asset."
-        },
-        "mapName": {
-          "type": "string",
-          "description": "Name of the added ActionMap."
-        },
-        "actionMapCount": {
-          "type": "integer",
-          "description": "Total number of ActionMaps in the asset after the addition."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "actionMapCount",
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

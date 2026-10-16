@@ -67,47 +67,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-SaveResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-SaveResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the saved asset."
-        },
-        "actionMapCount": {
-          "type": "integer",
-          "description": "Number of ActionMaps in the saved asset."
-        },
-        "controlSchemeCount": {
-          "type": "integer",
-          "description": "Number of control schemes in the saved asset."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "actionMapCount",
-        "controlSchemeCount",
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

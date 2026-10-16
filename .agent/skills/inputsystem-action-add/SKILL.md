@@ -120,58 +120,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ActionAddResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ActionAddResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the modified asset."
-        },
-        "mapName": {
-          "type": "string",
-          "description": "Name of the ActionMap the Action was added to."
-        },
-        "actionName": {
-          "type": "string",
-          "description": "Name of the added Action."
-        },
-        "actionType": {
-          "type": "string",
-          "description": "Resolved input behavior type."
-        },
-        "expectedControlType": {
-          "type": "string",
-          "description": "Resolved expected control type, or null."
-        },
-        "bindingCount": {
-          "type": "integer",
-          "description": "Number of bindings on the new Action."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "bindingCount",
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

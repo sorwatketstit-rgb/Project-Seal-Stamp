@@ -81,50 +81,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ActionRemoveResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-ActionRemoveResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the modified asset."
-        },
-        "mapName": {
-          "type": "string",
-          "description": "Name of the ActionMap the Action was removed from."
-        },
-        "actionName": {
-          "type": "string",
-          "description": "Name of the removed Action."
-        },
-        "actionCount": {
-          "type": "integer",
-          "description": "Number of Actions remaining in the map."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "actionCount",
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

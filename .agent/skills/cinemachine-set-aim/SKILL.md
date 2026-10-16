@@ -26,9 +26,9 @@ Removes every existing `CinemachineRotationComposer`, `CinemachineHardLookAt`, a
 unity-mcp-cli run-tool cinemachine-set-aim --input '{
   "gameObjectRef": "string_value",
   "aimType": "string_value",
-  "screenX": "string_value",
-  "screenY": "string_value",
-  "damping": "string_value"
+  "screenX": 0,
+  "screenY": 0,
+  "damping": 0
 }'
 ```
 
@@ -54,11 +54,11 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `gameObjectRef` | `any` | Yes | Reference to the GameObject containing the CinemachineCamera component. |
+| `gameObjectRef` | `string` | Yes | Reference to the GameObject containing the CinemachineCamera component. RQL: GameObjectRef |
 | `aimType` | `string` | Yes | Which rotation-control (Aim) component to use. |
-| `screenX` | `any` | No | Normalized on-screen X target position for RotationComposer (Composition.ScreenPosition.x). |
-| `screenY` | `any` | No | Normalized on-screen Y target position for RotationComposer (Composition.ScreenPosition.y). |
-| `damping` | `any` | No | Uniform damping value applied where the component supports damping (RotationComposer). |
+| `screenX` | `number` | No | Normalized on-screen X target position for RotationComposer (Composition.ScreenPosition.x). |
+| `screenY` | `number` | No | Normalized on-screen Y target position for RotationComposer (Composition.ScreenPosition.y). |
+| `damping` | `number` | No | Uniform damping value applied where the component supports damping (RotationComposer). |
 
 ### Input JSON Schema
 
@@ -67,7 +67,7 @@ Read the /unity-initial-setup skill for detailed installation instructions.
   "type": "object",
   "properties": {
     "gameObjectRef": {
-      "$ref": "#/$defs/AIGD.GameObjectRef"
+      "type": "string"
     },
     "aimType": {
       "type": "string",
@@ -79,53 +79,12 @@ Read the /unity-initial-setup skill for detailed installation instructions.
       ]
     },
     "screenX": {
-      "$ref": "#/$defs/System.Single"
+      "type": "number"
     },
     "screenY": {
-      "$ref": "#/$defs/System.Single"
+      "type": "number"
     },
     "damping": {
-      "$ref": "#/$defs/System.Single"
-    }
-  },
-  "$defs": {
-    "System.Type": {
-      "type": "string"
-    },
-    "AIGD.GameObjectRef": {
-      "type": "object",
-      "properties": {
-        "instanceID": {
-          "type": "integer",
-          "description": "instanceID of the UnityEngine.Object. If it is '0' and 'path', 'name', 'assetPath' and 'assetGuid' is not provided, empty or null, then it will be used as 'null'. Priority: 1 (Recommended)"
-        },
-        "path": {
-          "type": "string",
-          "description": "Path of a GameObject in the hierarchy Sample 'character/hand/finger/particle'. Priority: 2."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of a GameObject in hierarchy. Priority: 3."
-        },
-        "assetType": {
-          "$ref": "#/$defs/System.Type",
-          "description": "Type of the asset."
-        },
-        "assetPath": {
-          "type": "string",
-          "description": "Path to the asset within the project. Starts with 'Assets/'"
-        },
-        "assetGuid": {
-          "type": "string",
-          "description": "Unique identifier for the asset."
-        }
-      },
-      "required": [
-        "instanceID"
-      ],
-      "description": "Find GameObject in opened Prefab or in the active Scene."
-    },
-    "System.Single": {
       "type": "number"
     }
   },
@@ -138,107 +97,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_Cinemachine-SetAimResponse"
-    }
-  },
-  "$defs": {
-    "AIGD.GameObjectRef": {
-      "type": "object",
-      "properties": {
-        "instanceID": {
-          "type": "integer",
-          "description": "instanceID of the UnityEngine.Object. If it is '0' and 'path', 'name', 'assetPath' and 'assetGuid' is not provided, empty or null, then it will be used as 'null'. Priority: 1 (Recommended)"
-        },
-        "path": {
-          "type": "string",
-          "description": "Path of a GameObject in the hierarchy Sample 'character/hand/finger/particle'. Priority: 2."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of a GameObject in hierarchy. Priority: 3."
-        },
-        "assetType": {
-          "$ref": "#/$defs/System.Type",
-          "description": "Type of the asset."
-        },
-        "assetPath": {
-          "type": "string",
-          "description": "Path to the asset within the project. Starts with 'Assets/'"
-        },
-        "assetGuid": {
-          "type": "string",
-          "description": "Unique identifier for the asset."
-        }
-      },
-      "required": [
-        "instanceID"
-      ],
-      "description": "Find GameObject in opened Prefab or in the active Scene."
-    },
-    "System.Type": {
-      "type": "string"
-    },
-    "AIGD.ComponentRef": {
-      "type": "object",
-      "properties": {
-        "index": {
-          "type": "integer",
-          "description": "Component 'index' attached to a gameObject. The first index is '0' and that is usually Transform or RectTransform. Priority: 2. Default value is -1."
-        },
-        "typeName": {
-          "type": "string",
-          "description": "Component type full name. Sample 'UnityEngine.Transform'. If the gameObject has two components of the same type, the output component is unpredictable. Priority: 3. Default value is null."
-        },
-        "instanceID": {
-          "type": "integer",
-          "description": "instanceID of the UnityEngine.Object. If this is '0', then it will be used as 'null'."
-        }
-      },
-      "required": [
-        "index",
-        "instanceID"
-      ],
-      "description": "Component reference. Used to find a Component at GameObject."
-    },
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_Cinemachine-SetAimResponse": {
-      "type": "object",
-      "properties": {
-        "gameObjectRef": {
-          "$ref": "#/$defs/AIGD.GameObjectRef",
-          "description": "Reference to the CinemachineCamera GameObject."
-        },
-        "cameraRef": {
-          "$ref": "#/$defs/AIGD.ComponentRef",
-          "description": "Reference to the CinemachineCamera component."
-        },
-        "aimType": {
-          "type": "string",
-          "description": "The AimType that was applied."
-        },
-        "componentName": {
-          "type": "string",
-          "description": "The Cinemachine component type name that was added (or 'None')."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

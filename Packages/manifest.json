@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.ivanmurzak.unity.mcp": "0.93.4",
+    "com.ivanmurzak.unity.mcp": "1.0.1",
     "com.ivanmurzak.unity.mcp.cinemachine": "1.0.19",
     "com.ivanmurzak.unity.mcp.inputsystem": "1.0.19",
     "com.unity.2d.sprite": "1.0.0",

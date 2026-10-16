@@ -73,41 +73,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-AssetCreateResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-AssetCreateResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the created InputActionAsset."
-        },
-        "initialActionMap": {
-          "type": "string",
-          "description": "Name of the initial ActionMap that was added, or null."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the asset was created successfully."
-        }
-      },
-      "required": [
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

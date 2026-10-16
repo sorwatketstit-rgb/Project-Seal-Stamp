@@ -58,11 +58,11 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `name` | `string` | No | Name of the new CinemachineCamera GameObject. |
-| `position` | `any` | No | World-space position of the camera. |
-| `rotation` | `any` | No | World-space rotation of the camera in euler angles (degrees). |
+| `position` | `string` | No | World-space position of the camera. RQL: Vector3 |
+| `rotation` | `string` | No | World-space rotation of the camera in euler angles (degrees). RQL: Vector3 |
 | `priority` | `integer` | No | Priority value. Higher priority wins when several CinemachineCameras are active. |
-| `followRef` | `any` | No | Optional GameObject the camera should Follow (drives position). |
-| `lookAtRef` | `any` | No | Optional GameObject the camera should LookAt (drives aim). |
+| `followRef` | `string` | No | Optional GameObject the camera should Follow (drives position). RQL: GameObjectRef |
+| `lookAtRef` | `string` | No | Optional GameObject the camera should LookAt (drives aim). RQL: GameObjectRef |
 
 ### Input JSON Schema
 
@@ -74,77 +74,19 @@ Read the /unity-initial-setup skill for detailed installation instructions.
       "type": "string"
     },
     "position": {
-      "$ref": "#/$defs/UnityEngine.Vector3"
+      "type": "string"
     },
     "rotation": {
-      "$ref": "#/$defs/UnityEngine.Vector3"
+      "type": "string"
     },
     "priority": {
       "type": "integer"
     },
     "followRef": {
-      "$ref": "#/$defs/AIGD.GameObjectRef"
-    },
-    "lookAtRef": {
-      "$ref": "#/$defs/AIGD.GameObjectRef"
-    }
-  },
-  "$defs": {
-    "UnityEngine.Vector3": {
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "additionalProperties": false
-    },
-    "System.Type": {
       "type": "string"
     },
-    "AIGD.GameObjectRef": {
-      "type": "object",
-      "properties": {
-        "instanceID": {
-          "type": "integer",
-          "description": "instanceID of the UnityEngine.Object. If it is '0' and 'path', 'name', 'assetPath' and 'assetGuid' is not provided, empty or null, then it will be used as 'null'. Priority: 1 (Recommended)"
-        },
-        "path": {
-          "type": "string",
-          "description": "Path of a GameObject in the hierarchy Sample 'character/hand/finger/particle'. Priority: 2."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of a GameObject in hierarchy. Priority: 3."
-        },
-        "assetType": {
-          "$ref": "#/$defs/System.Type",
-          "description": "Type of the asset."
-        },
-        "assetPath": {
-          "type": "string",
-          "description": "Path to the asset within the project. Starts with 'Assets/'"
-        },
-        "assetGuid": {
-          "type": "string",
-          "description": "Unique identifier for the asset."
-        }
-      },
-      "required": [
-        "instanceID"
-      ],
-      "description": "Find GameObject in opened Prefab or in the active Scene."
+    "lookAtRef": {
+      "type": "string"
     }
   }
 }
@@ -152,116 +94,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_Cinemachine-CameraCreateResponse"
-    }
-  },
-  "$defs": {
-    "AIGD.GameObjectRef": {
-      "type": "object",
-      "properties": {
-        "instanceID": {
-          "type": "integer",
-          "description": "instanceID of the UnityEngine.Object. If it is '0' and 'path', 'name', 'assetPath' and 'assetGuid' is not provided, empty or null, then it will be used as 'null'. Priority: 1 (Recommended)"
-        },
-        "path": {
-          "type": "string",
-          "description": "Path of a GameObject in the hierarchy Sample 'character/hand/finger/particle'. Priority: 2."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of a GameObject in hierarchy. Priority: 3."
-        },
-        "assetType": {
-          "$ref": "#/$defs/System.Type",
-          "description": "Type of the asset."
-        },
-        "assetPath": {
-          "type": "string",
-          "description": "Path to the asset within the project. Starts with 'Assets/'"
-        },
-        "assetGuid": {
-          "type": "string",
-          "description": "Unique identifier for the asset."
-        }
-      },
-      "required": [
-        "instanceID"
-      ],
-      "description": "Find GameObject in opened Prefab or in the active Scene."
-    },
-    "System.Type": {
-      "type": "string"
-    },
-    "AIGD.ComponentRef": {
-      "type": "object",
-      "properties": {
-        "index": {
-          "type": "integer",
-          "description": "Component 'index' attached to a gameObject. The first index is '0' and that is usually Transform or RectTransform. Priority: 2. Default value is -1."
-        },
-        "typeName": {
-          "type": "string",
-          "description": "Component type full name. Sample 'UnityEngine.Transform'. If the gameObject has two components of the same type, the output component is unpredictable. Priority: 3. Default value is null."
-        },
-        "instanceID": {
-          "type": "integer",
-          "description": "instanceID of the UnityEngine.Object. If this is '0', then it will be used as 'null'."
-        }
-      },
-      "required": [
-        "index",
-        "instanceID"
-      ],
-      "description": "Component reference. Used to find a Component at GameObject."
-    },
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_Cinemachine-CameraCreateResponse": {
-      "type": "object",
-      "properties": {
-        "gameObjectRef": {
-          "$ref": "#/$defs/AIGD.GameObjectRef",
-          "description": "Reference to the created CinemachineCamera GameObject."
-        },
-        "cameraRef": {
-          "$ref": "#/$defs/AIGD.ComponentRef",
-          "description": "Reference to the created CinemachineCamera component."
-        },
-        "instanceId": {
-          "type": "integer",
-          "description": "Instance id of the created GameObject."
-        },
-        "gameObjectName": {
-          "type": "string",
-          "description": "Name of the created GameObject."
-        },
-        "priority": {
-          "type": "integer",
-          "description": "Resolved priority value."
-        },
-        "follow": {
-          "type": "string",
-          "description": "Name of the Follow target, or null."
-        },
-        "lookAt": {
-          "type": "string",
-          "description": "Name of the LookAt target, or null."
-        }
-      },
-      "required": [
-        "instanceId",
-        "priority"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 

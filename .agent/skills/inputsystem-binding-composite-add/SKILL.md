@@ -60,7 +60,7 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 | `assetPath` | `string` | Yes | 'Assets/'-rooted path to the existing '.inputactions' asset. |
 | `mapName` | `string` | Yes | Name of the ActionMap containing the Action. |
 | `actionName` | `string` | Yes | Name of the Action to add the composite to. |
-| `parts` | `any` | Yes | Composite parts: each entry has a 'name' (e.g. 'up') and a control 'path' (e.g. '<Keyboard>/w'). |
+| `parts` | `string` | Yes | Composite parts: each entry has a 'name' (e.g. 'up') and a control 'path' (e.g. '<Keyboard>/w'). RQL: [CompositePart] |
 | `composite` | `string` | No | Composite type, e.g. '2DVector' (default), '1DAxis', 'Axis', 'Dpad'. |
 | `interactions` | `string` | No | Optional interactions applied to the composite root. |
 | `processors` | `string` | No | Optional processors applied to the composite root. |
@@ -81,7 +81,7 @@ Read the /unity-initial-setup skill for detailed installation instructions.
       "type": "string"
     },
     "parts": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-CompositePart-1"
+      "type": "string"
     },
     "composite": {
       "type": "string"
@@ -91,31 +91,6 @@ Read the /unity-initial-setup skill for detailed installation instructions.
     },
     "processors": {
       "type": "string"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-CompositePart": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Part name within the composite (e.g. 'up', 'down', 'left', 'right', 'negative', 'positive')."
-        },
-        "path": {
-          "type": "string",
-          "description": "Control path bound to this part (e.g. '<Keyboard>/w')."
-        },
-        "groups": {
-          "type": "string",
-          "description": "Optional control-scheme group(s) for this part."
-        }
-      }
-    },
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-CompositePart-1": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-CompositePart"
-      }
     }
   },
   "required": [
@@ -129,59 +104,5 @@ Read the /unity-initial-setup skill for detailed installation instructions.
 
 ## Output
 
-### Output JSON Schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "result": {
-      "$ref": "#/$defs/com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-BindingCompositeAddResponse"
-    }
-  },
-  "$defs": {
-    "com.IvanMurzak.Unity.MCP.Editor.API.Tool_InputSystem-BindingCompositeAddResponse": {
-      "type": "object",
-      "properties": {
-        "assetPath": {
-          "type": "string",
-          "description": "Path of the modified asset."
-        },
-        "mapName": {
-          "type": "string",
-          "description": "Name of the ActionMap."
-        },
-        "actionName": {
-          "type": "string",
-          "description": "Name of the Action."
-        },
-        "composite": {
-          "type": "string",
-          "description": "The composite type that was added."
-        },
-        "partCount": {
-          "type": "integer",
-          "description": "Number of composite parts added."
-        },
-        "bindingCount": {
-          "type": "integer",
-          "description": "Number of bindings on the Action after the addition (composite root + parts)."
-        },
-        "success": {
-          "type": "boolean",
-          "description": "Whether the operation succeeded."
-        }
-      },
-      "required": [
-        "partCount",
-        "bindingCount",
-        "success"
-      ]
-    }
-  },
-  "required": [
-    "result"
-  ]
-}
-```
+This tool does not return structured output.
 
