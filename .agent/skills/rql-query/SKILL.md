@@ -2,7 +2,8 @@
 name: rql-query
 description: "Query the live Unity scene (GameObjects, components, assets) with RQL in ONE call: filter, project, sort, count, walk hierarchies. Far fewer calls/tokens than reading objects one by one."
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # RQL / Query
@@ -37,29 +38,17 @@ Examples:
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool rql-query --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "query": "string_value"
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool rql-query --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool rql-query --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool rql-query --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

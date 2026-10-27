@@ -2,7 +2,8 @@
 name: cinemachine-set-aim
 description: Add or replace the rotation-control (Aim) component of a `CinemachineCamera`, chosen by `AimType` (RotationComposer, HardLookAt, PanTilt, or None). Applies common params (screen X/Y, damping) to RotationComposer where applicable.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Cinemachine / Set Aim
@@ -22,33 +23,21 @@ Removes every existing `CinemachineRotationComposer`, `CinemachineHardLookAt`, a
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool cinemachine-set-aim --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "gameObjectRef": "string_value",
   "aimType": "string_value",
   "screenX": 0,
   "screenY": 0,
   "damping": 0
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool cinemachine-set-aim --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-aim --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-aim --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

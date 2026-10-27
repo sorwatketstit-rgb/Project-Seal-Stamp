@@ -2,7 +2,8 @@
 name: cinemachine-brain-ensure
 description: Ensure a `CinemachineBrain` exists on a `Camera`. Targets the referenced Camera GameObject, or `Camera.main` when none is given. Returns the brain + camera info. A CinemachineBrain is required for any CinemachineCamera to actually drive the rendering Camera.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Cinemachine / Ensure Brain
@@ -19,29 +20,17 @@ Resolves the Camera, adds a `CinemachineBrain` if one is missing (idempotent —
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool cinemachine-brain-ensure --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "cameraRef": "string_value"
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool cinemachine-brain-ensure --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool cinemachine-brain-ensure --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool cinemachine-brain-ensure --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

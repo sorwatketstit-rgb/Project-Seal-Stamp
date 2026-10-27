@@ -2,7 +2,8 @@
 name: cinemachine-set-body
 description: Add or replace the position-control (Body) component of a `CinemachineCamera`, chosen by `BodyType` (Follow, OrbitalFollow, ThirdPersonFollow, PositionComposer, HardLockToTarget, or None). Applies common params (followOffset, damping, cameraDistance) where applicable.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Cinemachine / Set Body
@@ -23,33 +24,21 @@ Removes every existing `CinemachineFollow`, `CinemachineOrbitalFollow`, `Cinemac
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool cinemachine-set-body --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "gameObjectRef": "string_value",
   "bodyType": "string_value",
   "followOffset": "string_value",
   "damping": 0,
   "cameraDistance": 0
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool cinemachine-set-body --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-body --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-body --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

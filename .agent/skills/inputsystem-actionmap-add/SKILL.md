@@ -2,7 +2,8 @@
 name: inputsystem-actionmap-add
 description: Add a new ActionMap to an existing `.inputactions` InputActionAsset and save it.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # InputSystem / Add ActionMap
@@ -20,30 +21,18 @@ Loads the asset, adds the ActionMap (failing if a map of that name already exist
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool inputsystem-actionmap-add --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "assetPath": "string_value",
   "mapName": "string_value"
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool inputsystem-actionmap-add --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool inputsystem-actionmap-add --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool inputsystem-actionmap-add --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

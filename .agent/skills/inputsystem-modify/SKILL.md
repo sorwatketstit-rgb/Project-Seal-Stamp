@@ -2,7 +2,8 @@
 name: inputsystem-modify
 description: "Generic write escape-hatch: apply a `SerializedMember` diff to the `InputActionAsset` object itself via ReflectorNet `TryModify`, for fields not covered by the dedicated tools. Use 'inputsystem-get' first to inspect the structure."
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # InputSystem / Modify Asset (generic)
@@ -20,30 +21,18 @@ Loads the asset, applies the diff via `Reflector.TryModify`, and on success re-s
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool inputsystem-modify --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "assetPath": "string_value",
   "data": "string_value"
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool inputsystem-modify --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool inputsystem-modify --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool inputsystem-modify --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

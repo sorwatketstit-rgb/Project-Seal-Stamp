@@ -2,7 +2,8 @@
 name: inputsystem-binding-add
 description: Add a simple (non-composite) Binding to an Action in a `.inputactions` asset, with an optional control path, groups, interactions and processors, then save it.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # InputSystem / Add Binding
@@ -25,8 +26,9 @@ Loads the asset, resolves the Action, appends a binding with the supplied metada
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool inputsystem-binding-add --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "assetPath": "string_value",
   "mapName": "string_value",
   "actionName": "string_value",
@@ -34,26 +36,13 @@ unity-mcp-cli run-tool inputsystem-binding-add --input '{
   "groups": "string_value",
   "interactions": "string_value",
   "processors": "string_value"
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool inputsystem-binding-add --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool inputsystem-binding-add --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool inputsystem-binding-add --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

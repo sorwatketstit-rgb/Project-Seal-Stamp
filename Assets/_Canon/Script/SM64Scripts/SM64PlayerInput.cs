@@ -38,6 +38,7 @@ namespace SM64
         public bool CrouchHeld { get; private set; }
         public bool ActionPressed { get; private set; }
         public bool KickPressed { get; private set; }
+        public bool KickHeld { get; private set; }
 
         private void Update()
         {
@@ -54,6 +55,7 @@ namespace SM64
             CrouchHeld = false;
             ActionPressed = false;
             KickPressed = false;
+            KickHeld = false;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
@@ -65,6 +67,7 @@ namespace SM64
                 ResetInputs();
                 return;
             }
+
 #if ENABLE_INPUT_SYSTEM
             var keyboard = Keyboard.current;
             var gamepad = Gamepad.current;
@@ -140,6 +143,9 @@ namespace SM64
 
             KickPressed = (keyboard != null && (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.rightShiftKey.wasPressedThisFrame)) ||
                           (gamepad != null && gamepad.rightTrigger.wasPressedThisFrame);
+
+            KickHeld = (keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed)) ||
+                       (gamepad != null && gamepad.rightTrigger.isPressed);
 #else
             float moveX = Input.GetAxisRaw("Horizontal");
             float moveY = Input.GetAxisRaw("Vertical");
@@ -172,6 +178,8 @@ namespace SM64
             ActionPressed = Input.GetKeyDown(KeyCode.E);
 
             KickPressed = Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift);
+
+            KickHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 #endif
         }
     }

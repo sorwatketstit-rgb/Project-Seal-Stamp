@@ -5,7 +5,8 @@ description: |-
   language, operators, sources (scene objects, assets, scenes, prefabs, console logs, Editor state), Editor operations
   (create, add components, scenes, prefabs, assets, selection, Play Mode) and what installed extensions add.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 # RQL — query and change the Unity Editor
 
@@ -77,6 +78,7 @@ Scenes, prefabs, assets, Editor state:
 | `componentTypes` | component types that can be added (name fullName namespace) |
 | `console` | captured Editor log entries, oldest first (last 1000): logType message timestamp stackTrace sequence |
 | `editor` | Editor state (isPlaying, isPaused, selection …) and operations: CreateGameObject, OpenScene, NewScene, SaveScenes, InstantiatePrefab, OpenPrefab / SavePrefab / ClosePrefab, CopyAsset / MoveAsset / DeleteAsset / CreateFolder, CreateMaterial, SaveAssets, RefreshAssets, ClearConsole, ExecuteMenuItem (rql-schema "editor" for signatures) |
+| `lighting` | the active scene's lighting: environment (ambient, fog, skybox, sun), Lighting Settings asset, bake (rql-schema "lighting" for members and calls) |
 | `objects` | every GameObject in the loaded scenes, depth-first, inactive ones included |
 | `prefab` | root GameObject of the prefab open in prefab editing mode (none otherwise) |
 | `profiler` | Unity profiler: enabled supported memory rendering script frame modules (live snapshots, MB / ms); calls Start, Stop, ClearFrames, EnableModule, Save, Load (rql-schema "profiler" for signatures) |
@@ -95,4 +97,10 @@ Scenes, prefabs, assets, Editor state:
 - `com.IvanMurzak.Unity.MCP.Editor.Rql.Modules.UnityCoreModule`
 - `com.IvanMurzak.Unity.MCP.Editor.Rql.ToolTypesModule`
 - `com.IvanMurzak.Unity.MCP.Editor.Rql.Mathematics.MathematicsModule`
+- `com.IvanMurzak.Unity.MCP.Editor.Rql.Lighting.LightingModule`
 - `com.IvanMurzak.Unity.MCP.Editor.Rql.Physics3D.PhysicsModule`
+
+
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
+

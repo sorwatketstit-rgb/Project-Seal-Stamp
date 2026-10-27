@@ -2,7 +2,8 @@
 name: screenshot-isolated
 description: Render a target GameObject from a chosen camera angle with optional layer-based isolation, configurable background (solid/skybox/transparent), multi-light setup via JSON, and Composite (2x2 Front/Right/Back/Top) mode. Returns a PNG image. When isolated=true, inactive children may briefly fire OnEnable — see the body for side-effect notes.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Screenshot / Isolated GameObject
@@ -29,8 +30,9 @@ Isolation temporarily activates inactive child GameObjects so their renderers pa
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool screenshot-isolated --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "gameObjectRef": "string_value",
   "includeChildren": false,
   "isolated": false,
@@ -43,26 +45,13 @@ unity-mcp-cli run-tool screenshot-isolated --input '{
   "padding": 0,
   "lights": "string_value",
   "resolution": 0
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool screenshot-isolated --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool screenshot-isolated --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool screenshot-isolated --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

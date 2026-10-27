@@ -2,7 +2,8 @@
 name: cinemachine-set-default-blend
 description: Set the `DefaultBlend` of a `CinemachineBrain` — the blend style (Cut, EaseInOut, Linear, etc.) and duration used when transitioning between CinemachineCameras. Targets the referenced Camera's brain, or `Camera.main`'s brain.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Cinemachine / Set Default Blend
@@ -21,31 +22,19 @@ Resolves the brain (throws if the Camera has none), assigns a new `CinemachineBl
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool cinemachine-set-default-blend --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "style": "string_value",
   "time": 0,
   "cameraRef": "string_value"
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool cinemachine-set-default-blend --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-default-blend --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-default-blend --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

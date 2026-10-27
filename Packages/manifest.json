@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "com.ivanmurzak.unity.mcp": "1.0.1",
-    "com.ivanmurzak.unity.mcp.cinemachine": "1.0.19",
-    "com.ivanmurzak.unity.mcp.inputsystem": "1.0.19",
+    "com.ivanmurzak.unity.mcp": "1.5.0",
+    "com.ivanmurzak.unity.mcp.cinemachine": "2.0.2",
+    "com.ivanmurzak.unity.mcp.inputsystem": "2.0.2",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.ads": "4.16.4",

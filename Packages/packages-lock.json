@@ -8,7 +8,7 @@
       "url": "https://packages.unity.com"
     },
     "com.ivanmurzak.unity.mcp": {
-      "version": "1.0.1",
+      "version": "1.5.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -19,22 +19,22 @@
       "url": "https://package.openupm.com"
     },
     "com.ivanmurzak.unity.mcp.cinemachine": {
-      "version": "1.0.19",
+      "version": "2.0.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.ivanmurzak.unity.mcp": "0.93.2",
+        "com.ivanmurzak.unity.mcp": "1.5.0",
         "com.unity.cinemachine": "3.1.6"
       },
       "url": "https://package.openupm.com"
     },
     "com.ivanmurzak.unity.mcp.inputsystem": {
-      "version": "1.0.19",
+      "version": "2.0.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.ivanmurzak.unity.mcp": "0.93.2",
-        "com.unity.inputsystem": "1.7.0"
+        "com.ivanmurzak.unity.mcp": "1.5.0",
+        "com.unity.inputsystem": "1.8.2"
       },
       "url": "https://package.openupm.com"
     },

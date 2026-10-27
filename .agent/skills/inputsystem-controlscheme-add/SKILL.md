@@ -2,7 +2,8 @@
 name: inputsystem-controlscheme-add
 description: Add a Control Scheme (with optional required / optional device requirements) to a `.inputactions` asset, then save it.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # InputSystem / Add Control Scheme
@@ -22,32 +23,20 @@ Loads the asset, adds the control scheme via `AddControlScheme`, registers each 
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool inputsystem-controlscheme-add --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "assetPath": "string_value",
   "schemeName": "string_value",
   "requiredDevices": [],
   "optionalDevices": []
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool inputsystem-controlscheme-add --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool inputsystem-controlscheme-add --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool inputsystem-controlscheme-add --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

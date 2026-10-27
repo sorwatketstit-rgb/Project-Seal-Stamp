@@ -2,7 +2,8 @@
 name: cinemachine-set-priority
 description: Set the `Priority.Value` of a `CinemachineCamera`. The highest-priority active camera wins control of the `CinemachineBrain`.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Cinemachine / Set Priority
@@ -20,30 +21,18 @@ Assigns `CinemachineCamera.Priority` with the given value, marks the scene dirty
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool cinemachine-set-priority --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "gameObjectRef": "string_value",
   "priority": 0
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool cinemachine-set-priority --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-priority --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-priority --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 

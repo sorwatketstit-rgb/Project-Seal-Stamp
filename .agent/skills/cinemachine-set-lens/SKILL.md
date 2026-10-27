@@ -2,7 +2,8 @@
 name: cinemachine-set-lens
 description: Set lens fields of a `CinemachineCamera`'s `LensSettings` — field of view (perspective) or orthographic size, near / far clip planes, and Dutch (roll) angle. Only the fields you pass are changed.
 metadata:
-  generated-by: mcp-plugin-dotnet
+  generated-by: unity-mcp
+  ai-game-dev: exclude
 ---
 
 # Cinemachine / Set Lens
@@ -23,34 +24,22 @@ Reads the current `LensSettings`, applies only the provided fields, writes it ba
 
 ## How to Call
 
-```bash
-unity-mcp-cli run-tool cinemachine-set-lens --input '{
+```powershell
+[System.IO.File]::WriteAllText((Join-Path $PWD 'args.json'), @'
+{
   "gameObjectRef": "string_value",
   "fieldOfView": 0,
   "orthographicSize": 0,
   "nearClipPlane": 0,
   "farClipPlane": 0,
   "dutch": 0
-}'
+}
+'@)
+unity-mcp-cli.cmd run-tool cinemachine-set-lens --input-file args.json
 ```
 
-> For complex input (multi-line strings, code), save the JSON to a file and use:
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-lens --input-file args.json
-> ```
->
-> Or pipe via stdin (recommended):
-> ```bash
-> unity-mcp-cli run-tool cinemachine-set-lens --input-file - <<'EOF'
-> {"param": "value"}
-> EOF
-> ```
-
-
-### Troubleshooting
-
-If `unity-mcp-cli` is not found, either install it globally (`npm install -g unity-mcp-cli`) or use `npx unity-mcp-cli` instead.
-Read the /unity-initial-setup skill for detailed installation instructions.
+> CLI installation and usage: see the `unity-cli` skill.
+> If this task needs unavailable asset-generation or Blender tools, consult `ai-game-dev-app` for an optional integrated workflow.
 
 ## Input
 
