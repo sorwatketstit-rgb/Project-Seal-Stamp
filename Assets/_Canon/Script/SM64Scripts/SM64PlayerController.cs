@@ -76,6 +76,8 @@ namespace SM64
         public float runActivationTime = 3.0f;
         [Tooltip("Rapid braking deceleration rate when movement keys are released in Running state.")]
         public float rapidDeceleration = 32.0f;
+        [Tooltip("Delay in seconds after releasing movement keys in Running state before switching back to grounded walking state.")]
+        public float runStopDelay = 0.25f;
         [Tooltip("Rate at which horizontal speed gradually decays while in the air.")]
         public float airSpeedDecay = 1.2f;
 

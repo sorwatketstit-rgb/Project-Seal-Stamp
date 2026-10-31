@@ -4,12 +4,14 @@ namespace SM64
 {
     /// <summary>
     /// Grounded movement state for Running.
-    /// Moves at high speed with full strafing steering. Releasing movement keys rapidly
-    /// brakes velocity to 0 and transitions back to WalkingState.
+    /// Moves at high speed with full strafing steering.
+    /// When movement keys are released, maintains velocity for runStopDelay (0.25s) then switches to WalkingState
+    /// without changing the player's speed.
     /// </summary>
     public class PlayerRunningState : PlayerGroundedState
     {
         private float _particleTimer;
+        private float _stopMoveTimer;
 
         public PlayerRunningState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
             : base(controller, stateMachine) { }
@@ -19,6 +21,7 @@ namespace SM64
             base.Enter();
             Controller.CurrentMovementSubState = MovementSubState.Running;
             _particleTimer = 0f;
+            _stopMoveTimer = 0f;
 
             // Spawn first running particle upon entering the state
             Controller.SpawnRunningParticle();
@@ -46,6 +49,26 @@ namespace SM64
                 _particleTimer = 0f;
                 Controller.SpawnRunningParticle();
             }
+
+            // If player stopped pressing movement keys while grounded,
+            // wait for runStopDelay (0.25s) then immediately switch to grounded walking state without changing speed
+            bool isPressingMovement = Input != null && Input.MoveInput.sqrMagnitude > 0.01f;
+            if (isPressingMovement)
+            {
+                _stopMoveTimer = 0f;
+            }
+            else
+            {
+                _stopMoveTimer += Time.deltaTime;
+                if (_stopMoveTimer >= Controller.runStopDelay)
+                {
+                    if (Controller.IsGrounded())
+                    {
+                        StateMachine.ChangeState(Controller.WalkingState);
+                        return;
+                    }
+                }
+            }
         }
 
         public override void PhysicsUpdate()
@@ -65,14 +88,8 @@ namespace SM64
             }
             else
             {
-                // Rapid brake to zero when keys are released
-                currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, Controller.rapidDeceleration * Time.deltaTime);
-                Controller.HorizontalVelocity = (currentSpeed > 0.05f) ? Controller.transform.forward * currentSpeed : Vector3.zero;
-
-                if (currentSpeed <= 0.05f)
-                {
-                    StateMachine.ChangeState(Controller.WalkingState);
-                }
+                // When movement keys are stopped, do not change the player's speed
+                Controller.HorizontalVelocity = currentHoriz;
             }
         }
 
@@ -80,6 +97,7 @@ namespace SM64
         {
             base.Exit();
             _particleTimer = 0f;
+            _stopMoveTimer = 0f;
         }
     }
 }

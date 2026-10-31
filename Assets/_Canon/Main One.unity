@@ -4629,7 +4629,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   promptUI: {fileID: 1009766613}
-  debugLogs: 1
+  debugLogs: 0
   npcTalkCanvas: {fileID: 1009766613}
   buttonInteractable: {fileID: 1110467920}
   continuePrompt: {fileID: 1871473629}
@@ -5132,6 +5132,7 @@ GameObject:
   - component: {fileID: 1148859654}
   - component: {fileID: 1148859655}
   - component: {fileID: 1148859656}
+  - component: {fileID: 1148859657}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -5288,6 +5289,7 @@ MonoBehaviour:
   runParticleLifetime: 0.75
   runActivationTime: 1.5
   rapidDeceleration: 28
+  runStopDelay: 0.25
   airSpeedDecay: 0.8
   jumpForce: 5
   doubleJumpForce: 7.5
@@ -5528,6 +5530,22 @@ MonoBehaviour:
   detectionCenter: {fileID: 1358175479}
   interactKey: 101
   debugLogs: 0
+--- !u!114 &1148859657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148859641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6868f5918cbf04498da480c574fe548, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SM64.StateLogger
+  playerController: {fileID: 1148859647}
+  formatReadableNames: 1
+  showStateTransition: 1
+  logInitialState: 1
 --- !u!1 &1153969777
 GameObject:
   m_ObjectHideFlags: 0
