@@ -8,6 +8,10 @@ namespace SM64
         private Phase _phase;
         private float _phaseTimer;
 
+        public bool IsStalling => _phase == Phase.Stall;
+        public bool IsSlamming => _phase == Phase.Slam;
+        public bool IsRecovering => _phase == Phase.Recovery;
+
         private const float StallDuration = 0.2f;
         private const float RecoveryDuration = 0.25f;
         private const float SlamSpeed = -25f;

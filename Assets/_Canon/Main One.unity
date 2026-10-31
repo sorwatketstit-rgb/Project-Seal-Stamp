@@ -2611,11 +2611,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SM64.SM64CameraController
   target: {fileID: 1148859646}
-  targetOffset: {x: 0, y: 1.5, z: 0}
+  targetOffset: {x: 0, y: 1, z: 0}
   rotateSpeed: 120
-  zoomSpeed: 2
-  minDistance: 2
-  maxDistance: 8
+  zoomSpeed: 0.35
+  minDistance: 3
+  maxDistance: 7.5
   obstructionMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -5392,6 +5392,7 @@ MonoBehaviour:
   leapStateName: Leap
   crouchStateName: Crouch
   sealStateName: Seal
+  sealSuckStateName: SealSuck
   speedParam: Speed
   verticalSpeedParam: VerticalSpeed
   isGroundedParam: IsGrounded
@@ -5399,6 +5400,12 @@ MonoBehaviour:
   isAirborneParam: IsAirborne
   isWallSlidingParam: IsWallSliding
   isLedgeHangingParam: IsLedgeHanging
+  isCrouchingParam: IsCrouching
+  isSealParam: IsSeal
+  isSealSuckingParam: IsSealSucking
+  isDoubleJumpingParam: IsDoubleJumping
+  isClimbingParam: IsClimbing
+  gameTimeParam: GameTime
   stateHashParam: AnimState
   enableDebugLogs: 0
   currentAnimationState: 0

@@ -9,6 +9,9 @@ namespace SM64
         private bool _hasDoubleJumped;
         private int _jumpCount;
 
+        public bool HasDoubleJumped => _hasDoubleJumped;
+        public int JumpCount => _jumpCount;
+
         public PlayerAirborneState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
             : base(controller, stateMachine) { }
 

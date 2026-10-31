@@ -159,6 +159,11 @@ namespace SM64
 
         public float RunLandingThreshold => walkSpeed * 1.5f;
 
+        // Public Game Time Access (for pause, animation timing, and desync reconciliation)
+        public float GameTime => SM64.GameTime.Time;
+        public float GameDeltaTime => SM64.GameTime.DeltaTime;
+        public bool IsGamePaused => SM64.GameTime.IsPaused;
+
         // Runtime Velocity & Counters
         public Vector3 HorizontalVelocity { get; set; }
         public float VerticalVelocity { get; set; }
