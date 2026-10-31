@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using SM64;
@@ -11,35 +12,37 @@ using SM64;
 public class Interactable : MonoBehaviour
 {
     [Header("Detection")]
-    [SerializeField] private float interactRadius = 2f;
+    [SerializeField] protected float interactRadius = 2f;
     [Tooltip("Point the camera line-of-sight check aims at. Falls back to this transform.")]
-    [SerializeField] private Transform lineOfSightTarget;
+    [SerializeField] protected Transform lineOfSightTarget;
+
+    public float InteractRadius => interactRadius;
 
     [Header("Events")]
     public UnityEvent onInteract;
 
     [Header("Floaty UI (placeholder)")]
-    [SerializeField] private GameObject promptUI;
+    [SerializeField] protected GameObject promptUI;
 
     [Header("Debug")]
-    [SerializeField] private bool debugLogs = true;
+    [SerializeField] protected bool debugLogs = true;
 
-    private SphereCollider sphere;
-    private int playersInRange;
+    protected SphereCollider sphere;
+    protected int playersInRange;
 
     /// <summary>True while a Player-tagged object with SM64PlayerController is inside this object's sphere.</summary>
     public bool PlayerInRange => playersInRange > 0;
 
     public Vector3 LineOfSightPoint => lineOfSightTarget != null ? lineOfSightTarget.position : transform.position;
 
-    private void Reset()
+    protected virtual void Reset()
     {
         sphere = GetComponent<SphereCollider>();
         sphere.isTrigger = true;
         sphere.radius = interactRadius;
     }
 
-    private void Awake()
+    protected virtual void Awake()
     {
         sphere = GetComponent<SphereCollider>();
         sphere.isTrigger = true;
@@ -47,13 +50,13 @@ public class Interactable : MonoBehaviour
         HidePrompt();
     }
 
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
         if (sphere == null) sphere = GetComponent<SphereCollider>();
         if (sphere != null) sphere.radius = interactRadius;
     }
 
-    private void OnTriggerEnter(Collider other)
+    protected virtual void OnTriggerEnter(Collider other)
     {
         bool tagOk = other.CompareTag("Player");
         bool controllerOk = other.GetComponentInParent<SM64PlayerController>() != null;
@@ -71,7 +74,7 @@ public class Interactable : MonoBehaviour
         }
     }
 
-    private void OnTriggerExit(Collider other)
+    protected virtual void OnTriggerExit(Collider other)
     {
         if (debugLogs) Debug.Log($"[Interactable:{name}] '{other.name}' left my range.", this);
 
@@ -82,14 +85,15 @@ public class Interactable : MonoBehaviour
         }
     }
 
-    private static bool IsPlayer(Collider other)
+    protected static bool IsPlayer(Collider other)
     {
         return other.CompareTag("Player") && other.GetComponentInParent<SM64PlayerController>() != null;
     }
 
     /// <summary>Called by PlayerInteractor when E is pressed.</summary>
-    public void Interact()
+    public virtual void Interact()
     {
+        if (!isActiveAndEnabled) return;
         if (!PlayerInRange)
         {
             if (debugLogs) Debug.LogWarning($"[Interactable:{name}] Interact() called but player is not in my range.", this);
@@ -98,19 +102,47 @@ public class Interactable : MonoBehaviour
         onInteract?.Invoke();
     }
 
+    public void ResyncRange()
+    {
+        playersInRange = 0;
+        foreach (Collider c in Physics.OverlapSphere(transform.position, interactRadius))
+        {
+            if (IsPlayer(c)) playersInRange++;
+        }
+        if (playersInRange == 0) HidePrompt();
+        else ShowPrompt();
+    }
+
+    /// <summary>
+    /// Delays re-enabling this interactable and re-evaluates if the player is still in range before showing prompt.
+    /// </summary>
+    public void EnableAfterDelay(float delay)
+    {
+        StartCoroutine(EnableAfterDelayRoutine(delay));
+    }
+
+    private IEnumerator EnableAfterDelayRoutine(float delay)
+    {
+        enabled = false;
+        HidePrompt();
+        yield return new WaitForSeconds(delay);
+        enabled = true;
+        ResyncRange();
+    }
+
     // ---- Floaty UI placeholder ----
     // Replace the body with your real UI (world-space canvas, fade, bobbing, etc).
-    public void ShowPrompt()
+    public virtual void ShowPrompt()
     {
         if (promptUI != null && !promptUI.activeSelf) promptUI.SetActive(true);
     }
 
-    public void HidePrompt()
+    public virtual void HidePrompt()
     {
         if (promptUI != null && promptUI.activeSelf) promptUI.SetActive(false);
     }
 
-    private void OnDrawGizmosSelected()
+    protected virtual void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, interactRadius);
