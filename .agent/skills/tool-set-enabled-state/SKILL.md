@@ -1,14 +1,14 @@
 ---
 name: tool-set-enabled-state
-description: Enable or disable MCP tools by name in batch. Persists the change via `UnityMcpPluginEditor.Instance.Save()` only when at least one tool actually flipped. Returns per-input success flags plus optional operation logs.
+description: "DEPRECATED: use `tool-set-visibility`. Shows (Enabled=true) or hides (Enabled=false) MCP tools by name in batch; a hidden tool is only left out of tools/list and still runs when called by name. Persists the change via `UnityMcpPluginEditor.Instance.Save()` only when at least one tool actually flipped. Returns per-input success flags plus optional operation logs."
 metadata:
   generated-by: unity-mcp
   ai-game-dev: exclude
 ---
 
-# Tool / Set Enabled State
+# Tool / Set Enabled State (deprecated: tool-set-visibility)
 
-Enable or disable MCP tools by name. Allows controlling which tools are available for the AI agent.
+Deprecated old name of `tool-set-visibility`, kept working until the next major release. `Enabled` means visible: the flag only decides whether MCP clients see the tool listed (`tools/list`); a hidden tool still runs through `tools/call`.
 
 ## Inputs
 
@@ -17,7 +17,7 @@ Enable or disable MCP tools by name. Allows controlling which tools are availabl
 
 ## Behavior
 
-Each entry is resolved against the tool manager's exact-name and case-insensitive lookups. Already-correct state short-circuits as success without writing. The plugin's config is saved once at the end iff at least one tool actually changed state.
+Same as `tool-set-visibility`: each entry is resolved against the tool manager's exact-name and case-insensitive lookups, already-correct state short-circuits as success, and the config is saved once at the end iff a tool changed.
 
 ## How to Call
 
@@ -38,7 +38,7 @@ unity-mcp-cli.cmd run-tool tool-set-enabled-state --input-file args.json
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `tools` | `string` | Yes | Array of tools with their desired enabled state. RQL: [ToolToggleInput] |
+| `tools` | `string` | Yes | Array of tools with their desired visibility (Enabled = visible). RQL: [ToolToggleInput] |
 | `includeLogs` | `boolean` | No | Include operation logs in the result. Default: false |
 
 ### Input JSON Schema
