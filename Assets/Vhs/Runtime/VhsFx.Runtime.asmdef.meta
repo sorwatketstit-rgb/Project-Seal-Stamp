@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d0831f130bd66a843af27e58d4a2e45a
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Runtime/VhsFx.Runtime.asmdef
+  uploadId: 818004

@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 1110ed3fadce8fd42b6de656d2dcf980
+timeCreated: 1729490142
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Editor/Installer.cs
+  uploadId: 818004

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: cc22e500b37ee2049afcb90dd1b9cb08
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Samples/Vhs.unity
+  uploadId: 818004

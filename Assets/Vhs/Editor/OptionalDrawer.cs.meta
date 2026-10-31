@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 33cfe19fa6182ab46a28fb57d6f51b4f
+timeCreated: 1697616861
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Editor/OptionalDrawer.cs
+  uploadId: 818004

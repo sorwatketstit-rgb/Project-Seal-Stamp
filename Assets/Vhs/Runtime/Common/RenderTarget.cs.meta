@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: dfde4c0cf7c54674badb868363ce1596
+timeCreated: 1697618098
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Runtime/Common/RenderTarget.cs
+  uploadId: 818004

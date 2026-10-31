@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 074eb04a5009453ea004483946e7c745
+timeCreated: 1699535003
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Runtime/Vhs/Vhs.shader
+  uploadId: 818004

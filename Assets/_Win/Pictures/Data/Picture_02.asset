@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffddf150ff62ef743a28f866a3ea3a3e, type: 3}
+  m_Name: Picture_02
+  m_EditorClassIdentifier: Assembly-CSharp::cData
+  id: 2
+  pictureName: Seal 2
+  popupDescription: A picture of a seal plush but with a melon on it's head??
+  journalDescription: A picture of a seal plush but with a melon on it's head.
+  description: A melon on a seal plush??
+  image: {fileID: 21300000, guid: a520193cf0d8ccf44ae02355302fc39a, type: 3}
+  locationFound: Unknown location

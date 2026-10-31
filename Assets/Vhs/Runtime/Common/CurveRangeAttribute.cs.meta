@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 9f4a648f116540d1828e39e198af01a3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Runtime/Common/CurveRangeAttribute.cs
+  uploadId: 818004

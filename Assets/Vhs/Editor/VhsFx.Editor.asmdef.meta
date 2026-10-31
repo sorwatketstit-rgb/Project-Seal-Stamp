@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 62b27a2552e64f240b6cbb23144d170d
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 270015
+  packageName: Vhs
+  packageVersion: 1.9.3
+  assetPath: Assets/Vhs/Editor/VhsFx.Editor.asmdef
+  uploadId: 818004
