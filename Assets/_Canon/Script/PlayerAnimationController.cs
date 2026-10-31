@@ -26,7 +26,8 @@ namespace SM64
         GroundPoundLand,
         Leap,
         Crouch,
-        Seal
+        Seal,
+        SealSuck
     }
 
     /// <summary>
@@ -76,6 +77,7 @@ namespace SM64
         [SerializeField] private string leapStateName = "Leap";
         [SerializeField] private string crouchStateName = "Crouch";
         [SerializeField] private string sealStateName = "Seal";
+        [SerializeField] private string sealSuckStateName = "SealSuck";
 
         [Header("Animator Parameter Names")]
         [SerializeField] private string speedParam = "Speed";
@@ -85,6 +87,12 @@ namespace SM64
         [SerializeField] private string isAirborneParam = "IsAirborne";
         [SerializeField] private string isWallSlidingParam = "IsWallSliding";
         [SerializeField] private string isLedgeHangingParam = "IsLedgeHanging";
+        [SerializeField] private string isCrouchingParam = "IsCrouching";
+        [SerializeField] private string isSealParam = "IsSeal";
+        [SerializeField] private string isSealSuckingParam = "IsSealSucking";
+        [SerializeField] private string isDoubleJumpingParam = "IsDoubleJumping";
+        [SerializeField] private string isClimbingParam = "IsClimbing";
+        [SerializeField] private string gameTimeParam = "GameTime";
         [SerializeField] private string stateHashParam = "AnimState";
 
         [Header("Debug & Diagnostics")]
@@ -127,6 +135,12 @@ namespace SM64
         private int _airborneHash;
         private int _wallSlideHash;
         private int _ledgeHangHash;
+        private int _crouchingHash;
+        private int _sealHash;
+        private int _sealSuckingHash;
+        private int _doubleJumpingHash;
+        private int _climbingHash;
+        private int _gameTimeHash;
         private int _stateParamHash;
 
         // Parameter existence caching on Animator
@@ -274,6 +288,7 @@ namespace SM64
             _stateNameToHash[PlayerAnimationType.Leap] = Animator.StringToHash(leapStateName);
             _stateNameToHash[PlayerAnimationType.Crouch] = Animator.StringToHash(crouchStateName);
             _stateNameToHash[PlayerAnimationType.Seal] = Animator.StringToHash(sealStateName);
+            _stateNameToHash[PlayerAnimationType.SealSuck] = Animator.StringToHash(sealSuckStateName);
 
             _speedHash = Animator.StringToHash(speedParam);
             _vertSpeedHash = Animator.StringToHash(verticalSpeedParam);
@@ -282,6 +297,12 @@ namespace SM64
             _airborneHash = Animator.StringToHash(isAirborneParam);
             _wallSlideHash = Animator.StringToHash(isWallSlidingParam);
             _ledgeHangHash = Animator.StringToHash(isLedgeHangingParam);
+            _crouchingHash = Animator.StringToHash(isCrouchingParam);
+            _sealHash = Animator.StringToHash(isSealParam);
+            _sealSuckingHash = Animator.StringToHash(isSealSuckingParam);
+            _doubleJumpingHash = Animator.StringToHash(isDoubleJumpingParam);
+            _climbingHash = Animator.StringToHash(isClimbingParam);
+            _gameTimeHash = Animator.StringToHash(gameTimeParam);
             _stateParamHash = Animator.StringToHash(stateHashParam);
         }
 
@@ -339,8 +360,13 @@ namespace SM64
                 return PlayerAnimationType.Run;
             }
 
-            if (state is PlayerAirborneState)
+            if (state is PlayerAirborneState airborneState)
             {
+                if (airborneState.HasDoubleJumped && vertSpeed > fallVelocityThreshold)
+                {
+                    return PlayerAnimationType.DoubleJump;
+                }
+
                 // If moving upward -> Jump, otherwise -> Fall
                 return (vertSpeed > fallVelocityThreshold) ? PlayerAnimationType.Jump : PlayerAnimationType.Fall;
             }
@@ -365,17 +391,16 @@ namespace SM64
                 return PlayerAnimationType.WallSlide;
             }
 
-            if (state is PlayerLedgeGrabState)
+            if (state is PlayerLedgeGrabState ledgeGrabState)
             {
-                // Can distinguish hang vs climb
-                return PlayerAnimationType.LedgeHang;
+                return ledgeGrabState.IsClimbing ? PlayerAnimationType.LedgeClimb : PlayerAnimationType.LedgeHang;
             }
 
-            if (state is PlayerGroundPoundState)
+            if (state is PlayerGroundPoundState groundPoundState)
             {
-                if (vertSpeed < -10f)
+                if (groundPoundState.IsSlamming)
                     return PlayerAnimationType.GroundPoundSlam;
-                if (playerController.IsGrounded())
+                if (groundPoundState.IsRecovering || playerController.IsGrounded())
                     return PlayerAnimationType.GroundPoundLand;
 
                 return PlayerAnimationType.GroundPoundStall;
@@ -389,6 +414,11 @@ namespace SM64
             if (state is PlayerCrouchingState)
             {
                 return PlayerAnimationType.Crouch;
+            }
+
+            if (state is PlayerSealSuckingState)
+            {
+                return PlayerAnimationType.SealSuck;
             }
 
             if (state is PlayerSealState)
@@ -508,6 +538,11 @@ namespace SM64
             bool isRunning = playerController.CurrentMovementSubState == MovementSubState.Running;
             bool isWallSlide = playerController.StateMachine?.CurrentState is PlayerWallSlideState;
             bool isLedge = playerController.StateMachine?.CurrentState is PlayerLedgeGrabState;
+            bool isCrouching = playerController.StateMachine?.CurrentState is PlayerCrouchingState;
+            bool isSealSucking = playerController.StateMachine?.CurrentState is PlayerSealSuckingState;
+            bool isSeal = (playerController.StateMachine?.CurrentState is PlayerSealState) && !isSealSucking;
+            bool isDoubleJumping = playerController.StateMachine?.CurrentState is PlayerAirborneState ab && ab.HasDoubleJumped;
+            bool isClimbing = playerController.StateMachine?.CurrentState is PlayerLedgeGrabState lg && lg.IsClimbing;
 
             SetParameterFloat(_speedHash, horizSpeed);
             SetParameterFloat(_vertSpeedHash, vertSpeed);
@@ -516,6 +551,12 @@ namespace SM64
             SetParameterBool(_airborneHash, !grounded);
             SetParameterBool(_wallSlideHash, isWallSlide);
             SetParameterBool(_ledgeHangHash, isLedge);
+            SetParameterBool(_crouchingHash, isCrouching);
+            SetParameterBool(_sealHash, isSeal);
+            SetParameterBool(_sealSuckingHash, isSealSucking);
+            SetParameterBool(_doubleJumpingHash, isDoubleJumping);
+            SetParameterBool(_climbingHash, isClimbing);
+            SetParameterFloat(_gameTimeHash, GameTime.Time);
             SetParameterInt(_stateParamHash, (int)currentAnimationState);
         }
 

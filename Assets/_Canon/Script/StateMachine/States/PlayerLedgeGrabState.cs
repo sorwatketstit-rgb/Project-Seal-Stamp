@@ -17,6 +17,7 @@ namespace SM64
         private Vector3 _climbStartPos;
         private const float ClimbDuration = 0.28f;
 
+        public bool IsClimbing => _isClimbing;
         public float LedgeCooldownTimer { get; set; }
 
         public PlayerLedgeGrabState(SM64PlayerController controller, PlayerStateMachine stateMachine) 
