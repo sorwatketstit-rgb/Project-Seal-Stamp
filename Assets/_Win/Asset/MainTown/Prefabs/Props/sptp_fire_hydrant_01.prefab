@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 489846}
   - component: {fileID: 3370624}
   - component: {fileID: 2310772}
-  - component: {fileID: 6438158}
+  - component: {fileID: 8352418883063434501}
   m_Layer: 0
   m_Name: sptp_fire_hydrant_01
   m_TagString: Untagged
@@ -91,8 +91,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6438158
-MeshCollider:
+--- !u!65 &8352418883063434501
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -109,7 +109,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: b5cc2844dd57c3344b4840ed177ba8ec, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 0.397705, y: 0.72054994, z: 0.409869}
+  m_Center: {x: 0.034528498, y: 0.36027497, z: 0.00000049918884}

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 419192}
   - component: {fileID: 3357156}
   - component: {fileID: 2370064}
-  - component: {fileID: 6458748}
+  - component: {fileID: 2165774615386427595}
   m_Layer: 0
   m_Name: sptp_air_conditioning_01
   m_TagString: Untagged
@@ -91,8 +91,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6458748
-MeshCollider:
+--- !u!65 &2165774615386427595
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -109,7 +109,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: aa44ac0d867342d4b90d4b81b2c31902, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 1.0231098, y: 0.7544619, z: 1.2707999}
+  m_Center: {x: 0, y: 0.37723094, z: 0}

@@ -13,6 +13,7 @@ A 3D character controller and mechanics framework built in Unity, inspired by cl
   - [Special Acrobatics](#special-acrobatics)
   - [Crouch & Seal Transformation](#crouch--seal-transformation)
 - [StateLogger](#statelogger)
+- [SM64ShadowDisplay (Circular Blob Shadow)](#sm64shadowdisplay-circular-blob-shadow)
 - [Game Time System (Pausing & Desync Reconciliation)](#game-time-system-pausing--desync-reconciliation)
 - [Player Animation Controller](#player-animation-controller)
   - [Supported Animation States](#supported-animation-states)
@@ -33,6 +34,7 @@ The character controller is divided into modular, decoupled systems:
 - **`GameTime` & `GameTimeManager`**: Centralized simulation clock decoupled from `Time.timeScale` for custom pause and state reconciliation.
 - **`PlayerAnimationController`**: Evaluates active states and controller velocities to drive Animator states and parameter updates.
 - **`StateLogger`**: Read-only observer component that reports player state transitions to the Unity console.
+- **`SM64ShadowDisplay`**: Projects a circular Mario 64-style shadow beneath the player, raycasting downward to project onto solid ground during jumps and airtime.
 
 ---
 
@@ -143,6 +145,23 @@ Located in `Assets/_Canon/Script/StateLogger.cs`.
 - **Formatted Logging**: Formats state class names cleanly (e.g. `[StateLogger] Player state changed: Running -> Walking`).
 - **Auto-Discovery**: Automatically finds `SM64PlayerController` in the scene if unassigned.
 - **Safe Lifecycle**: Subscribes on `OnEnable` and unsubscribes on `OnDisable` / `OnDestroy` to prevent memory leaks.
+
+---
+
+## SM64ShadowDisplay (Circular Blob Shadow)
+
+Located in `Assets/_Canon/Script/SM64Scripts/SM64ShadowDisplay.cs`.
+
+Recreates the iconic *Super Mario 64* circular drop shadow beneath the character:
+- **Ground Raycast Projection**: Casts a non-allocating vertical raycast downward from the player (`groundLayerMask`, default to `playerController.groundMask`). When the player walks, jumps, or leaps, the shadow follows the ground geometry beneath them.
+- **Surface Normal Alignment**: Rotates the shadow decal to smoothly conform to slopes, hills, and uneven ground angles.
+- **Dynamic Scale & Fade with Height**:
+  - As the player ascends in the air, the shadow smoothly shrinks (`baseScale` $\to$ `minScaleAtMaxHeight`) and fades in opacity (`baseOpacity` $\to$ `minOpacityAtMaxHeight`), providing vital spatial depth perception.
+  - Automatically hides when airborne over bottomless pits or beyond `maxShadowDistance`.
+- **Zero-Setup Runtime Generation**:
+  - Automatically creates a flat, non-jittering shadow quad in world space if no custom shadow object is assigned.
+  - Uses the custom procedural shader `SM64/BlobShadow` (`Assets/Shader/SM64BlobShadow.shader`), which generates a crisp, anti-aliased circular gradient without requiring external textures.
+  - Modulates opacity via `MaterialPropertyBlock` to prevent memory allocations or material cloning at runtime.
 
 ---
 

@@ -218,11 +218,14 @@ namespace SM64
         /// </summary>
         private void ApplyModelTilt()
         {
-            bool isGrounded = playerController.IsGrounded();
-            bool isLeaping  = playerController.StateMachine?.CurrentState is PlayerLeapState;
+            bool isGrounded    = playerController.IsGrounded();
+            bool isLeaping     = playerController.StateMachine?.CurrentState is PlayerLeapState;
+            bool isWallSliding = playerController.StateMachine?.CurrentState is PlayerWallSlideState;
 
-            // ── Tilt is only active while airborne and not leaping ───────────────
-            bool shouldTilt = !isGrounded && !isLeaping;
+            // ── Tilt is only active while airborne, not leaping, and not wall-sliding ──
+            // Wall sliding is suppressed because the model is pinned against a surface;
+            // pitch/roll tilts would visually conflict with the wall contact pose.
+            bool shouldTilt = !isGrounded && !isLeaping && !isWallSliding;
 
             Vector3 targetTilt = Vector3.zero;
 

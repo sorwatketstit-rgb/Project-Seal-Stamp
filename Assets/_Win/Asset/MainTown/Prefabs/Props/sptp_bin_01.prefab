@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 455286}
   - component: {fileID: 3300680}
   - component: {fileID: 2374450}
-  - component: {fileID: 6414454}
+  - component: {fileID: 1407773106891369592}
   m_Layer: 0
   m_Name: sptp_bin_01
   m_TagString: Untagged
@@ -91,8 +91,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6414454
-MeshCollider:
+--- !u!65 &1407773106891369592
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -109,7 +109,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 551faa9f9e362aa4fb7abf44d3e7d1a0, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 0.31964394, y: 0.7299079, z: 0.31964394}
+  m_Center: {x: 0, y: 0.36504596, z: 0}

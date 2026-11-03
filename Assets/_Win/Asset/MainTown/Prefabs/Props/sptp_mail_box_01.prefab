@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 485622}
   - component: {fileID: 3309202}
   - component: {fileID: 2329072}
-  - component: {fileID: 6449516}
+  - component: {fileID: 5745444376252252218}
   m_Layer: 0
   m_Name: sptp_mail_box_01
   m_TagString: Untagged
@@ -91,8 +91,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6449516
-MeshCollider:
+--- !u!65 &5745444376252252218
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -109,7 +109,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 7ab034c894dbe39408860a18216d047c, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 0.598787, y: 1.1621249, z: 0.738118}
+  m_Center: {x: 0.0026444641, y: 0.5807984, z: 0.0000029951332}
