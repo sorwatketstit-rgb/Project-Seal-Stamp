@@ -94,6 +94,48 @@ namespace SM64
         public float gravity = -9.81f;
         public float maxFallSpeed = -20f;
 
+        [Header("Water & Swimming Settings")]
+        [Tooltip("Layer representing water colliders (default Water layer 4).")]
+        public LayerMask waterLayerMask;
+        [Tooltip("Swim speed while in Seal Swim state.")]
+        public float swimSpeed = 14.0f;
+        [Tooltip("Acceleration rate while swimming.")]
+        public float swimAcceleration = 24.0f;
+        [Tooltip("Deceleration rate when stopping swimming.")]
+        public float swimDeceleration = 16.0f;
+        [Tooltip("Vertical offset above the water collider surface to float at.")]
+        public float swimFloatHeightOffset = 0.05f;
+        [Tooltip("Spring strength for keeping the seal floating at the water surface.")]
+        public float swimBuoyancySpring = 12.0f;
+        [Tooltip("Upward fling force when reverting to human while swimming.")]
+        public float swimFlingUpwardForce = 11.0f;
+        [Tooltip("Forward fling force when reverting to human while swimming.")]
+        public float swimFlingForwardForce = 9.0f;
+        [Tooltip("Upward fling force when reverting to human from normal seal state on land.")]
+        public float sealRevertFlingUpForce = 8.0f;
+        [Tooltip("Forward fling force when reverting to human from normal seal state on land.")]
+        public float sealRevertFlingForwardForce = 6.0f;
+
+        [Header("Swim Particle VFX")]
+        [Tooltip("Particle effect prefab spawned behind the seal while swimming. If null, defaults to runParticlePrefab.")]
+        public GameObject swimParticlePrefab;
+        [Tooltip("Target transform where swim particles spawn. If null, spawns behind the player.")]
+        public Transform swimParticleSpawnTarget;
+        [Tooltip("Interval in seconds between swimming particle spawns.")]
+        public float swimParticleInterval = 0.18f;
+        [Tooltip("Lifetime in seconds of spawned swimming particles.")]
+        public float swimParticleLifetime = 0.8f;
+
+        [Header("Spawn & Respawn Settings")]
+        [Tooltip("The designated spawn point for the player. If unassigned, automatically looks for SpawnPoint in scene.")]
+        public Transform spawnPoint;
+        [Tooltip("Optional death visual effect spawned at player position upon death.")]
+        public GameObject deathVFXPrefab;
+        public float deathVFXLifetime = 2.0f;
+        [Tooltip("Optional respawn visual effect spawned at spawn point upon respawn.")]
+        public GameObject respawnVFXPrefab;
+        public float respawnVFXLifetime = 2.0f;
+
         [Header("Aiming & Slow-Fall")]
         [Tooltip("Multiplier applied to gravity while aiming with Shift (0.2 = falls 5x slower).")]
         public float aimGravityMultiplier = 0.2f;
@@ -158,6 +200,7 @@ namespace SM64
         public PlayerLeapState LeapState { get; private set; }
         public PlayerCrouchingState CrouchingState { get; private set; }
         public PlayerSealState SealState { get; private set; }
+        public PlayerSealSwimState SealSwimState => SealState?.SwimState;
 
         // Movement Sub-State
         public MovementSubState CurrentMovementSubState
@@ -195,6 +238,23 @@ namespace SM64
             {
                 int wallLayer = LayerMask.NameToLayer("Wall");
                 wallLayerMask = wallLayer != -1 ? (1 << wallLayer) : (1 << 6);
+            }
+
+            // Default to "Water" layer (Layer 4 in TagManager) if not assigned
+            if (waterLayerMask.value == 0)
+            {
+                int waterLayer = LayerMask.NameToLayer("Water");
+                waterLayerMask = waterLayer != -1 ? (1 << waterLayer) : (1 << 4);
+            }
+
+            // Discover designated spawn point if unassigned
+            if (spawnPoint == null)
+            {
+                SpawnPoint sp = SpawnPoint.GetSpawnPoint();
+                if (sp != null)
+                {
+                    spawnPoint = sp.transform;
+                }
             }
 
             // Setup temporary models if prefabs are assigned from project assets
@@ -342,6 +402,31 @@ namespace SM64
             Destroy(spawned, runParticleLifetime);
         }
 
+        public float SwimParticleInterval => swimParticleInterval;
+        public float SwimParticleLifetime => swimParticleLifetime;
+        public GameObject SwimParticlePrefab => swimParticlePrefab;
+
+        /// <summary>
+        /// Spawns a swim wake particle behind the seal while in Seal Swim state.
+        /// </summary>
+        public void SpawnSwimParticle()
+        {
+            GameObject prefabToSpawn = swimParticlePrefab != null ? swimParticlePrefab : runParticlePrefab;
+            if (prefabToSpawn == null)
+                return;
+
+            Vector3 spawnPosition = swimParticleSpawnTarget != null
+                ? swimParticleSpawnTarget.position
+                : transform.position - transform.forward * 0.6f + Vector3.up * 0.05f;
+
+            Quaternion spawnRotation = swimParticleSpawnTarget != null
+                ? swimParticleSpawnTarget.rotation
+                : Quaternion.LookRotation(-transform.forward, Vector3.up);
+
+            GameObject spawned = Instantiate(prefabToSpawn, spawnPosition, spawnRotation);
+            Destroy(spawned, swimParticleLifetime);
+        }
+
         #endregion
 
         private void Start()
@@ -351,6 +436,12 @@ namespace SM64
 
         private void Update()
         {
+            // Water grace timer countdown
+            if (_waterGraceTimer > 0f)
+            {
+                _waterGraceTimer -= Time.deltaTime;
+            }
+
             // Jump buffer timer
             if (_jumpBufferCounter > 0f)
             {
@@ -361,6 +452,12 @@ namespace SM64
             StateMachine.HandleInput();
             StateMachine.LogicUpdate();
             StateMachine.PhysicsUpdate();
+
+            // Continuous water check (catches triggers, volumes, and walking into water)
+            if (CheckWaterContact(out _))
+            {
+                HandleWaterCollision();
+            }
 
             // Execute movement through CharacterController if enabled
             if (CharacterController.enabled)
@@ -536,6 +633,201 @@ namespace SM64
             else
             {
                 VerticalVelocity = Mathf.Max(VerticalVelocity + gravity * multiplier * Time.deltaTime, maxFallSpeed);
+            }
+        }
+
+        #endregion
+
+        #region Water Collision & Respawn
+
+        private float _waterGraceTimer;
+        private bool _isDead;
+
+        /// <summary>
+        /// Grants temporary immunity from water collision death (e.g. during water breach fling or post-respawn).
+        /// </summary>
+        public void GrantWaterGracePeriod(float duration)
+        {
+            _waterGraceTimer = Mathf.Max(_waterGraceTimer, duration);
+        }
+
+        /// <summary>
+        /// Evaluates whether the player is currently contacting or submerged in the water collision layer.
+        /// </summary>
+        public bool CheckWaterContact(out RaycastHit surfaceHit)
+        {
+            surfaceHit = default;
+            if (_waterGraceTimer > 0f || _isDead)
+                return false;
+
+            Vector3 playerPos = transform.position;
+            float radius = CharacterController != null ? CharacterController.radius : 0.5f;
+            float height = CharacterController != null ? CharacterController.height : 2.0f;
+
+            // 1. Raycast downward across player height
+            Vector3 rayStart = playerPos + Vector3.up * 1.5f;
+            float rayDistance = height + 1.8f;
+            if (Physics.Raycast(rayStart, Vector3.down, out surfaceHit, rayDistance, waterLayerMask, QueryTriggerInteraction.Collide))
+            {
+                if (playerPos.y <= surfaceHit.point.y + 0.35f)
+                {
+                    return true;
+                }
+            }
+
+            // 2. Overlap sphere at player base/center
+            Vector3 checkCenter = playerPos + Vector3.up * (height * 0.3f);
+            if (Physics.CheckSphere(checkCenter, radius + 0.15f, waterLayerMask, QueryTriggerInteraction.Collide))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Handles water contact:
+        /// - If player is in Seal state, activates Seal Swim state.
+        /// - If player is in Human state (not seal), triggers death and respawn.
+        /// </summary>
+        public void HandleWaterCollision()
+        {
+            if (_waterGraceTimer > 0f || _isDead)
+                return;
+
+            if (StateMachine != null && StateMachine.CurrentState is PlayerSealState)
+            {
+                // In seal state: transition to SealSwimState if not already swimming
+                if (!(StateMachine.CurrentState is PlayerSealSwimState))
+                {
+                    SealState.EnterSwim();
+                }
+            }
+            else
+            {
+                // Not in seal state: Die and respawn!
+                Die();
+            }
+        }
+
+        private void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            if (((1 << hit.gameObject.layer) & waterLayerMask) != 0 || hit.collider.CompareTag("Water"))
+            {
+                HandleWaterCollision();
+            }
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (((1 << other.gameObject.layer) & waterLayerMask) != 0 || other.CompareTag("Water"))
+            {
+                HandleWaterCollision();
+            }
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (((1 << other.gameObject.layer) & waterLayerMask) != 0 || other.CompareTag("Water"))
+            {
+                HandleWaterCollision();
+            }
+        }
+
+        /// <summary>
+        /// Kills the player and triggers respawn at the spawn point.
+        /// </summary>
+        public void Die()
+        {
+            if (_isDead) return;
+            _isDead = true;
+
+            if (deathVFXPrefab != null)
+            {
+                GameObject vfx = Instantiate(deathVFXPrefab, transform.position, Quaternion.identity);
+                Destroy(vfx, deathVFXLifetime);
+            }
+
+            if (PlayerRespawnManager.Instance != null)
+            {
+                PlayerRespawnManager.Instance.Die();
+            }
+            else
+            {
+                Respawn();
+            }
+        }
+
+        /// <summary>
+        /// Respawns the player at the single SpawnPoint in the game.
+        /// </summary>
+        public void Respawn()
+        {
+            _isDead = false;
+
+            // Find target spawn position and rotation
+            Vector3 targetPos = transform.position;
+            Quaternion targetRot = transform.rotation;
+
+            if (spawnPoint != null)
+            {
+                targetPos = spawnPoint.position;
+                targetRot = spawnPoint.rotation;
+            }
+            else if (SpawnPoint.Instance != null)
+            {
+                targetPos = SpawnPoint.Instance.Position;
+                targetRot = SpawnPoint.Instance.Rotation;
+            }
+            else
+            {
+                SpawnPoint sp = SpawnPoint.GetSpawnPoint();
+                if (sp != null)
+                {
+                    targetPos = sp.Position;
+                    targetRot = sp.Rotation;
+                }
+            }
+
+            // Temporarily disable CharacterController for clean teleportation
+            if (CharacterController != null)
+            {
+                CharacterController.enabled = false;
+            }
+
+            transform.position = targetPos;
+            transform.rotation = targetRot;
+
+            if (CharacterController != null)
+            {
+                CharacterController.enabled = true;
+            }
+
+            // Reset dynamic velocities
+            HorizontalVelocity = Vector3.zero;
+            VerticalVelocity = 0f;
+            ResetAirJumps();
+
+            // Reset visual model and state
+            SetVisualModel(PlayerVisualModel.Default);
+
+            BallKicking kicking = GetComponent<BallKicking>();
+            if (kicking != null) kicking.enabled = true;
+
+            SealStateMachine seal = GetComponent<SealStateMachine>();
+            if (seal != null) seal.EndSucking();
+
+            if (StateMachine != null)
+            {
+                StateMachine.ChangeState(WalkingState);
+            }
+
+            GrantWaterGracePeriod(0.75f);
+
+            if (respawnVFXPrefab != null)
+            {
+                GameObject vfx = Instantiate(respawnVFXPrefab, targetPos, targetRot);
+                Destroy(vfx, respawnVFXLifetime);
             }
         }
 

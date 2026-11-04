@@ -18,13 +18,17 @@ namespace SM64
         protected readonly SealStateMachine Seal;
         private readonly BallKicking _ballKicking;
         private readonly PlayerSealSuckingState _suckingState;
+        private readonly PlayerSealSwimState _swimState;
 
         private bool _requireRelease;   // Shift must be released before it can act again
         private bool _enteringSucking;  // true while handing over to the sucking sub-state
+        private bool _enteringSwim;     // true while handing over to the swimming sub-state
 
         private float _nudgeCooldown;   // time until the next nudge may start
         private float _nudgeTimeLeft;   // time left in the nudge that is currently playing
         private Vector3 _nudgeDir;
+
+        public PlayerSealSwimState SwimState => _swimState;
 
         public PlayerSealState(SM64PlayerController controller, PlayerStateMachine stateMachine)
             : base(controller, stateMachine)
@@ -32,15 +36,17 @@ namespace SM64
             Seal = controller.GetComponent<SealStateMachine>();
             _ballKicking = controller.GetComponent<BallKicking>();
             _suckingState = new PlayerSealSuckingState(controller, stateMachine, this);
+            _swimState = new PlayerSealSwimState(controller, stateMachine, this);
         }
 
-        /// <summary>Used by the sucking sub-state so it shares the root's references.</summary>
+        /// <summary>Used by the sucking and swimming sub-states so they share the root's references.</summary>
         protected PlayerSealState(SM64PlayerController controller, PlayerStateMachine stateMachine, PlayerSealState root)
             : base(controller, stateMachine)
         {
             Seal = root.Seal;
             _ballKicking = root._ballKicking;
             _suckingState = null;
+            _swimState = null;
         }
 
         public override void Enter()
@@ -48,8 +54,8 @@ namespace SM64
             // Shift may still be down (from the transform, or from sucking): require a fresh press.
             _requireRelease = true;
 
-            // Coming back from the sucking sub-state: we are already a seal, so skip the transform.
-            if (StateMachine.PreviousState is PlayerSealSuckingState)
+            // Coming back from the sucking or swimming sub-states: we are already a seal, so skip the transform.
+            if (StateMachine.PreviousState is PlayerSealSuckingState || StateMachine.PreviousState is PlayerSealSwimState)
                 return;
 
             // [TEMPORARY] Swap to seal model
@@ -101,12 +107,26 @@ namespace SM64
 
         public override void LogicUpdate()
         {
+            // Water check: if seal is in water, transition to swimming sub-state
+            if (Controller.CheckWaterContact(out _))
+            {
+                EnterSwim();
+                return;
+            }
+
             // Landing check if entered mid-air (from leap timeout)
             if (Controller.IsGrounded() && Controller.VerticalVelocity <= 0f)
             {
                 Controller.VerticalVelocity = -2f;
                 Controller.AirborneState.ResetJumpCount();
             }
+        }
+
+        public void EnterSwim()
+        {
+            if (_swimState == null) return;
+            _enteringSwim = true;
+            StateMachine.ChangeState(_swimState);
         }
 
         public override void PhysicsUpdate()
@@ -167,10 +187,11 @@ namespace SM64
 
         public override void Exit()
         {
-            // Handing over to the sucking sub-state: still a seal, so keep the model and kick lock.
-            if (_enteringSucking)
+            // Handing over to sub-states (sucking or swimming): still a seal, so keep the model and kick lock.
+            if (_enteringSucking || _enteringSwim)
             {
                 _enteringSucking = false;
+                _enteringSwim = false;
                 return;
             }
 
@@ -190,16 +211,15 @@ namespace SM64
             Controller.PlaySealRevertParticle();
         }
 
-        private void RevertToNormal()
+        protected virtual void RevertToNormal()
         {
-            if (Controller.IsGrounded())
-            {
-                StateMachine.ChangeState(Controller.WalkingState);
-            }
-            else
-            {
-                StateMachine.ChangeState(Controller.AirborneState);
-            }
+            // After the player changes into human state from seal state, they are flung upward in the direction the player is looking at
+            Vector3 forwardDir = Controller.transform.forward;
+            Controller.VerticalVelocity = Controller.sealRevertFlingUpForce;
+            Controller.HorizontalVelocity = forwardDir * Controller.sealRevertFlingForwardForce;
+            Controller.CharacterController.Move(Vector3.up * 0.1f);
+
+            StateMachine.ChangeState(Controller.AirborneState);
         }
     }
 }

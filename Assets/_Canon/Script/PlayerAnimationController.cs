@@ -90,6 +90,7 @@ namespace SM64
         [SerializeField] private string isCrouchingParam = "IsCrouching";
         [SerializeField] private string isSealParam = "IsSeal";
         [SerializeField] private string isSealSuckingParam = "IsSealSucking";
+        [SerializeField] private string isSealSwimmingParam = "IsSealSwimming";
         [SerializeField] private string isDoubleJumpingParam = "IsDoubleJumping";
         [SerializeField] private string isClimbingParam = "IsClimbing";
         [SerializeField] private string gameTimeParam = "GameTime";
@@ -138,6 +139,7 @@ namespace SM64
         private int _crouchingHash;
         private int _sealHash;
         private int _sealSuckingHash;
+        private int _sealSwimmingHash;
         private int _doubleJumpingHash;
         private int _climbingHash;
         private int _gameTimeHash;
@@ -303,6 +305,7 @@ namespace SM64
             _crouchingHash = Animator.StringToHash(isCrouchingParam);
             _sealHash = Animator.StringToHash(isSealParam);
             _sealSuckingHash = Animator.StringToHash(isSealSuckingParam);
+            _sealSwimmingHash = Animator.StringToHash(isSealSwimmingParam);
             _doubleJumpingHash = Animator.StringToHash(isDoubleJumpingParam);
             _climbingHash = Animator.StringToHash(isClimbingParam);
             _gameTimeHash = Animator.StringToHash(gameTimeParam);
@@ -543,6 +546,7 @@ namespace SM64
             bool isLedge = playerController.StateMachine?.CurrentState is PlayerLedgeGrabState;
             bool isCrouching = playerController.StateMachine?.CurrentState is PlayerCrouchingState;
             bool isSealSucking = playerController.StateMachine?.CurrentState is PlayerSealSuckingState;
+            bool isSealSwimming = playerController.StateMachine?.CurrentState is PlayerSealSwimState;
             bool isSeal = (playerController.StateMachine?.CurrentState is PlayerSealState) && !isSealSucking;
             bool isDoubleJumping = playerController.StateMachine?.CurrentState is PlayerAirborneState ab && ab.HasDoubleJumped;
             bool isClimbing = playerController.StateMachine?.CurrentState is PlayerLedgeGrabState lg && lg.IsClimbing;
@@ -557,6 +561,7 @@ namespace SM64
             SetParameterBool(_crouchingHash, isCrouching);
             SetParameterBool(_sealHash, isSeal);
             SetParameterBool(_sealSuckingHash, isSealSucking);
+            SetParameterBool(_sealSwimmingHash, isSealSwimming);
             SetParameterBool(_doubleJumpingHash, isDoubleJumping);
             SetParameterBool(_climbingHash, isClimbing);
             SetParameterFloat(_gameTimeHash, GameTime.Time);

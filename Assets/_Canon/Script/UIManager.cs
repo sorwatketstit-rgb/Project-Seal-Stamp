@@ -93,6 +93,17 @@ namespace SM64
                     SetMovementState(dynamicMovement);
                 }
             }
+            else if (playerController.StateMachine.CurrentState is PlayerSealSwimState)
+            {
+                float horizontalSpeed = playerController.HorizontalVelocity.magnitude;
+                string dynamicMovement = horizontalSpeed > 0.15f ? "Swimming" : "Floating";
+
+                if (dynamicMovement != _lastMovementState)
+                {
+                    _lastMovementState = dynamicMovement;
+                    SetMovementState(dynamicMovement);
+                }
+            }
             else if (playerController.StateMachine.CurrentState is PlayerSealState)
             {
                 float horizontalSpeed = playerController.HorizontalVelocity.magnitude;
@@ -225,6 +236,12 @@ namespace SM64
                 case PlayerCrouchingState:
                     action = "Crouch";
                     movement = (playerController != null && playerController.HorizontalVelocity.magnitude > 0.15f) ? "Crouch Walk" : "Crouching";
+                    _lastMovementState = movement;
+                    break;
+
+                case PlayerSealSwimState:
+                    action = "Seal Swim";
+                    movement = (playerController != null && playerController.HorizontalVelocity.magnitude > 0.15f) ? "Swimming" : "Floating";
                     _lastMovementState = movement;
                     break;
 

@@ -250,6 +250,23 @@ namespace SM64
             _menuCloseCoroutine = StartCoroutine(DelayedCloseMenuUI());
         }
 
+        /// <summary>
+        /// Unstuck button callback. Closes menu and respawns the player at the single SpawnPoint.
+        /// </summary>
+        public void OnUnstuckClicked()
+        {
+            CloseMenu();
+
+            if (PlayerRespawnManager.Instance != null)
+            {
+                PlayerRespawnManager.Instance.Respawn();
+            }
+            else if (playerController != null)
+            {
+                playerController.Respawn();
+            }
+        }
+
         private IEnumerator DelayedCloseMenuUI()
         {
             if (menuCloseUIDelay > 0f)
