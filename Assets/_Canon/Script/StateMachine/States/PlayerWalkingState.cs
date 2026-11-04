@@ -26,7 +26,12 @@ namespace SM64
         {
             base.LogicUpdate();
 
-            if (Input == null) return;
+            if (Input == null || Controller.IsAiming)
+            {
+                _holdTimer = 0f;
+                _lastHoldDirection = Vector2.zero;
+                return;
+            }
 
             // Track continuous hold in 1 direction
             if (Input.MoveInput.magnitude > 0.5f)
@@ -64,6 +69,12 @@ namespace SM64
 
         public override void PhysicsUpdate()
         {
+            if (Controller.IsAiming)
+            {
+                Controller.HorizontalVelocity = Vector3.zero;
+                return;
+            }
+
             Vector3 desiredDir = Controller.GetCameraRelativeInput(Input != null ? Input.MoveInput : Vector2.zero);
             float targetSpeed = desiredDir.magnitude > 0.1f ? Controller.walkSpeed : 0f;
 

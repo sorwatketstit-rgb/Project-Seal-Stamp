@@ -51,7 +51,7 @@ namespace SM64
 
         public override void HandleInput()
         {
-            if (Input == null) return;
+            if (Input == null || Controller.IsAiming) return;
 
             // Ground Pound trigger only after at least a double jump (jumpCount >= 2)
             if (Input.CrouchPressed && _jumpCount >= 2)
@@ -182,8 +182,14 @@ namespace SM64
 
         public override void PhysicsUpdate()
         {
-            // Apply gravity
+            // Apply gravity (aiming slow-fall handled automatically inside ApplyGravity)
             Controller.ApplyGravity();
+
+            if (Controller.IsAiming)
+            {
+                Controller.HorizontalVelocity = Vector3.zero;
+                return;
+            }
 
             // Gradually decay horizontal air speed (air resistance)
             Vector3 currentHoriz = Controller.HorizontalVelocity;

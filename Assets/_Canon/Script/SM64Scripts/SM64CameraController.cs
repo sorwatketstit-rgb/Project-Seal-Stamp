@@ -38,6 +38,35 @@ namespace SM64
         [SerializeField] private bool isMenuMode = false;
         public bool IsMenuMode => isMenuMode;
 
+        [Header("Aim Mode (TPS Shooter)")]
+        [Tooltip("Camera offset from the pivot while in TPS aim mode (over the shoulder).")]
+        public Vector3 aimShoulderOffset = new Vector3(0.65f, 0.2f, -1.8f);
+        [Tooltip("Field of View to transition to while aiming.")]
+        public float aimFieldOfView = 50f;
+        public bool enableAimFov = true;
+        [Tooltip("Speed of blending between normal orbit and TPS aim mode.")]
+        public float aimTransitionSpeed = 10f;
+        public float aimRotateSpeed = 120f;
+        public bool IsAiming => _isAiming;
+
+        [Header("Aim Mode Compensation & Convergence")]
+        [Tooltip("Automatically angles the camera towards the player's central aim line to compensate for any shoulder offset.")]
+        public bool enableConvergenceCompensation = true;
+
+        [Tooltip("Distance ahead of the player where the camera crosshair converges.")]
+        public float aimConvergenceDistance = 25f;
+
+        [Tooltip("Fine-tune manual compensation offset (X = horizontal, Y = vertical, Z = depth) applied to the aim point.")]
+        public Vector3 aimCompensationOffset = Vector3.zero;
+
+        /// <summary>The world position where the camera aim currently converges.</summary>
+        public Vector3 CurrentAimTargetPoint { get; private set; }
+
+        private bool _isAiming = false;
+        private float _aimBlend = 0f;
+        private float _defaultFov = 60f;
+        private Camera _cam;
+
         private float _currentDistance;
         private float _yaw;
         private float _pitch = 15f;
@@ -63,10 +92,21 @@ namespace SM64
         private void Awake()
         {
             _currentDistance = maxDistance;
+            _cam = GetComponent<Camera>();
+            if (_cam != null)
+            {
+                _defaultFov = _cam.fieldOfView;
+            }
         }
 
         private void Start()
         {
+            if (_cam == null)
+            {
+                _cam = Camera.main;
+                if (_cam != null) _defaultFov = _cam.fieldOfView;
+            }
+
             // Acquire input reference from target if available
             if (target != null)
             {
@@ -99,31 +139,85 @@ namespace SM64
                 look = _input.LookInput;
             }
 
+            float currentRotateSpeed = _isAiming ? aimRotateSpeed : rotateSpeed;
+
             // Delta values are already frame-rate independent from Mouse.delta
-            _yaw += look.x * rotateSpeed;
-            _pitch -= look.y * rotateSpeed;
-            _pitch = Mathf.Clamp(_pitch, -30f, 60f);
+            _yaw += look.x * currentRotateSpeed;
+            _pitch -= look.y * currentRotateSpeed;
+            _pitch = Mathf.Clamp(_pitch, _isAiming ? -50f : -30f, _isAiming ? 70f : 60f);
 
-            // Handle Zoom Input
-            HandleZoom();
-
-            // Calculate pivot point and desired camera position
-            Vector3 pivot = target.position + targetOffset;
-            Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
-            Vector3 desiredPosition = pivot + rotation * new Vector3(0, 0, -_currentDistance);
-
-            // SphereCast from pivot to desired position to prevent wall clipping
-            Vector3 rayDirection = desiredPosition - pivot;
-            float rayLength = rayDirection.magnitude;
-
-            if (rayLength > 0.001f && Physics.SphereCast(pivot, cameraRadius, rayDirection.normalized, out RaycastHit hit, rayLength, obstructionMask, QueryTriggerInteraction.Ignore))
+            // Handle Zoom Input (only when not aiming)
+            if (!_isAiming)
             {
-                desiredPosition = pivot + rayDirection.normalized * Mathf.Max(hit.distance - cameraRadius, 0.1f);
+                HandleZoom();
             }
 
-            // Apply transformations
-            transform.position = desiredPosition;
-            transform.LookAt(pivot);
+            // Update aim blend (0 = normal, 1 = aim)
+            float targetBlend = _isAiming ? 1f : 0f;
+            _aimBlend = Mathf.MoveTowards(_aimBlend, targetBlend, Time.deltaTime * aimTransitionSpeed);
+
+            // Calculate pivot point and rotation
+            Vector3 pivot = target.position + targetOffset;
+            Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+
+            // 1. Normal orbit position & rotation
+            Vector3 normalPos = pivot + rotation * new Vector3(0, 0, -_currentDistance);
+            Vector3 normalRayDir = normalPos - pivot;
+            float normalRayLen = normalRayDir.magnitude;
+
+            if (normalRayLen > 0.001f && Physics.SphereCast(pivot, cameraRadius, normalRayDir.normalized, out RaycastHit hitNormal, normalRayLen, obstructionMask, QueryTriggerInteraction.Ignore))
+            {
+                normalPos = pivot + normalRayDir.normalized * Mathf.Max(hitNormal.distance - cameraRadius, 0.1f);
+            }
+            Vector3 normalLookDir = pivot - normalPos;
+            Quaternion normalRot = normalLookDir.sqrMagnitude > 0.001f ? Quaternion.LookRotation(normalLookDir) : rotation;
+
+            // 2. TPS Aim mode position & rotation (over the shoulder)
+            Vector3 aimPos = pivot + rotation * aimShoulderOffset;
+            Vector3 aimRayDir = aimPos - pivot;
+            float aimRayLen = aimRayDir.magnitude;
+
+            if (aimRayLen > 0.001f && Physics.SphereCast(pivot, cameraRadius, aimRayDir.normalized, out RaycastHit hitAim, aimRayLen, obstructionMask, QueryTriggerInteraction.Ignore))
+            {
+                aimPos = pivot + aimRayDir.normalized * Mathf.Max(hitAim.distance - cameraRadius, 0.1f);
+            }
+
+            Quaternion aimRot = rotation;
+
+            if (enableConvergenceCompensation)
+            {
+                // Target point along the central aim line in front of the player, plus optional fine-tune compensation offset
+                Vector3 centralTarget = pivot + rotation * (Vector3.forward * aimConvergenceDistance + aimCompensationOffset);
+                CurrentAimTargetPoint = centralTarget;
+
+                Vector3 camToTarget = centralTarget - aimPos;
+                if (camToTarget.sqrMagnitude > 0.001f)
+                {
+                    aimRot = Quaternion.LookRotation(camToTarget.normalized);
+                }
+            }
+            else
+            {
+                CurrentAimTargetPoint = aimPos + rotation * (Vector3.forward * aimConvergenceDistance + aimCompensationOffset);
+            }
+
+            // 3. Smooth blend between normal and aim mode
+            transform.position = Vector3.Lerp(normalPos, aimPos, _aimBlend);
+            transform.rotation = Quaternion.Slerp(normalRot, aimRot, _aimBlend);
+
+            // Blend FOV
+            if (_cam != null && enableAimFov)
+            {
+                _cam.fieldOfView = Mathf.Lerp(_defaultFov, aimFieldOfView, _aimBlend);
+            }
+        }
+
+        /// <summary>
+        /// Toggles third-person shooter aiming camera mode.
+        /// </summary>
+        public void SetAimMode(bool aiming)
+        {
+            _isAiming = aiming;
         }
 
         private void HandleMenuCameraUpdate()

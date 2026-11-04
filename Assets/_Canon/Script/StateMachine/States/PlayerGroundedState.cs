@@ -34,7 +34,7 @@ namespace SM64
 
         public override void HandleInput()
         {
-            if (Input == null) return;
+            if (Input == null || Controller.IsAiming) return;
 
             // Transition to Crouching State
             if (Input.CrouchPressed)
@@ -47,12 +47,6 @@ namespace SM64
             if (Input.JumpPressed)
             {
                 TriggerJump();
-            }
-
-            // Kick trigger — only in idle/walking substate (not running)
-            if (Input.KickPressed)
-            {
-                TryKickBall();
             }
         }
 

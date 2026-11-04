@@ -10,6 +10,9 @@ namespace SM64
         [Header("Controls Sensitivity")]
         public float lookSensitivity = 1.5f;
 
+        /// <summary>Set by BallKicking to indicate aiming mode is active (locks cursor and enables mouse look).</summary>
+        public bool IsAiming { get; set; }
+
         [Header("Input Blocking")]
         [Tooltip("When enabled, all movement, camera look, and action inputs are blocked and the mouse cursor is freed.")]
         [SerializeField] private bool isInputBlocked = false;
@@ -99,7 +102,10 @@ namespace SM64
             float lookX = 0f;
             float lookY = 0f;
 
-            if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+            bool isAimingActive = IsAiming || (keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed)) ||
+                                  (gamepad != null && gamepad.rightTrigger.isPressed);
+
+            if (Mouse.current != null && (Mouse.current.rightButton.isPressed || isAimingActive))
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
@@ -154,7 +160,9 @@ namespace SM64
             float lookX = 0f;
             float lookY = 0f;
 
-            if (Input.GetMouseButton(1))
+            bool isAimingActive = IsAiming || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            if (Input.GetMouseButton(1) || isAimingActive)
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ca6b5bc055d14e4886de4129bb6c0f4, type: 3}
+  m_Name: WorldNPCSet_New
+  m_EditorClassIdentifier: Assembly-CSharp::WorldNPCSet
+  worldId: city1
+  worldDisplayName: City 1
+  requiredDeliveries: 9
+  npcs:
+  - {fileID: 11400000, guid: df18166d2689797468a19dd320a339eb, type: 2}
+  - {fileID: 11400000, guid: 109330efb598c2b408c487046a1d3a7f, type: 2}
+  - {fileID: 11400000, guid: ac0269f430ceb704c99f5e382f32e8ec, type: 2}
+  - {fileID: 11400000, guid: 0d06764b641dd504396cfd1109f0ffb4, type: 2}
+  - {fileID: 11400000, guid: 29b1f36710429c7459a57edb0546f32b, type: 2}
+  - {fileID: 11400000, guid: 33647be5ff791c64fbde8547b68ea324, type: 2}
+  - {fileID: 11400000, guid: ac0ba76a70678f648a074a80d17f9a1f, type: 2}
+  - {fileID: 11400000, guid: f01150874c78e0345809755eeaa7ebe2, type: 2}
+  - {fileID: 11400000, guid: d5aacb572387ec94591583db56e5e8ec, type: 2}
+  - {fileID: 11400000, guid: d6116ffe5d736f644a5a6603327fe63b, type: 2}
+  - {fileID: 11400000, guid: 37973174fa381054da8ab7e9c265c4b5, type: 2}
+  - {fileID: 11400000, guid: ab1b08436f583864883c4487d718513c, type: 2}

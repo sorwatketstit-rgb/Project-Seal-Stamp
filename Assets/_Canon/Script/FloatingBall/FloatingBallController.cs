@@ -53,8 +53,11 @@ namespace SM64
         public BallStage CurrentStage => currentStage;
         public bool IsKicked => currentStage == BallStage.Kicked;
 
-        /// <summary>Horizontal facing direction supplied with the most recent kick request.</summary>
+        /// <summary>Facing direction (horizontal or full 3D) supplied with the most recent kick request.</summary>
         public Vector3 KickForward { get; private set; } = Vector3.forward;
+
+        /// <summary>Whether the most recent kick was requested as a full 3-axis shot.</summary>
+        public bool Is3DKick { get; private set; } = false;
 
         public float DetectionRadius
         {
@@ -123,15 +126,19 @@ namespace SM64
         }
 
         /// <summary>
-        /// Asks the ball to perform a kick. Returns false if it is already kicking.
+        /// Asks the ball to perform a kick/shot. Returns false if it is already kicking.
         /// Called by <see cref="BallKicking"/>. The actual movement is carried out by <see cref="FloatingBallLocation"/>.
         /// </summary>
-        public bool RequestKick(Vector3 playerForward)
+        public bool RequestKick(Vector3 direction, bool full3D = false)
         {
             if (currentStage == BallStage.Kicked) return false;
 
-            playerForward.y = 0f;
-            KickForward = playerForward.sqrMagnitude < 0.001f ? Vector3.forward : playerForward.normalized;
+            Is3DKick = full3D;
+            if (!full3D)
+            {
+                direction.y = 0f;
+            }
+            KickForward = direction.sqrMagnitude < 0.001f ? Vector3.forward : direction.normalized;
 
             onKicked?.Invoke();
 
@@ -142,12 +149,19 @@ namespace SM64
         }
 
         /// <summary>
-        /// Backwards-compatible alias for <see cref="RequestKick"/> so existing callers
-        /// (e.g. PlayerGroundedState) keep working.
+        /// Backwards-compatible alias for <see cref="RequestKick"/> (horizontal only).
         /// </summary>
         public void Kick(Vector3 playerForward)
         {
-            RequestKick(playerForward);
+            RequestKick(playerForward, false);
+        }
+
+        /// <summary>
+        /// Shoots the ball in all 3 axes (X, Y, Z).
+        /// </summary>
+        public void Shoot3D(Vector3 direction)
+        {
+            RequestKick(direction, true);
         }
 
         /// <summary>Called by the location script when the ball launches from the wind-up point.</summary>

@@ -94,6 +94,15 @@ namespace SM64
         public float gravity = -9.81f;
         public float maxFallSpeed = -20f;
 
+        [Header("Aiming & Slow-Fall")]
+        [Tooltip("Multiplier applied to gravity while aiming with Shift (0.2 = falls 5x slower).")]
+        public float aimGravityMultiplier = 0.2f;
+        [Tooltip("Maximum downward fall speed while aiming.")]
+        public float aimMaxFallSpeed = -2.5f;
+
+        /// <summary>True while player is holding Shift to aim the floating ball.</summary>
+        public bool IsAiming { get; set; } = false;
+
         [Header("Double Jump Optimization & Responsiveness")]
         [Tooltip("Number of jumps allowed in mid-air (1 = double jump, 2 = triple jump)")]
         public int maxAirJumps = 1;
@@ -518,7 +527,16 @@ namespace SM64
                 return;
             }
 
-            VerticalVelocity = Mathf.Max(VerticalVelocity + gravity * multiplier * Time.deltaTime, maxFallSpeed);
+            if (IsAiming)
+            {
+                // Decreased gravity for floaty slow fall while aiming
+                float slowGrav = gravity * aimGravityMultiplier;
+                VerticalVelocity = Mathf.Max(VerticalVelocity + slowGrav * Time.deltaTime, aimMaxFallSpeed);
+            }
+            else
+            {
+                VerticalVelocity = Mathf.Max(VerticalVelocity + gravity * multiplier * Time.deltaTime, maxFallSpeed);
+            }
         }
 
         #endregion

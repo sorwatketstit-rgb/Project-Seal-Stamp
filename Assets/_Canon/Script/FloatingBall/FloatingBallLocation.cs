@@ -297,8 +297,17 @@ namespace SM64
 
         private void BeginShoot()
         {
-            float rad = shootUpAngle * Mathf.Deg2Rad;
-            Vector3 dir = (_kickForward * Mathf.Cos(rad) + Vector3.up * Mathf.Sin(rad)).normalized;
+            Vector3 dir;
+            if (_controller != null && _controller.Is3DKick)
+            {
+                // Full 3D shot along all 3 axes as aimed by the player
+                dir = _kickForward;
+            }
+            else
+            {
+                float rad = shootUpAngle * Mathf.Deg2Rad;
+                dir = (_kickForward * Mathf.Cos(rad) + Vector3.up * Mathf.Sin(rad)).normalized;
+            }
 
             _shotVelocity = dir * shootSpeed; // initial momentum
             _shotTimer = 0f;

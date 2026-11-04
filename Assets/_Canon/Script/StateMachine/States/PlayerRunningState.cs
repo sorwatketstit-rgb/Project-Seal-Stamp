@@ -29,13 +29,8 @@ namespace SM64
 
         public override void HandleInput()
         {
+            if (Controller.IsAiming) return;
             base.HandleInput();
-
-            // Kick while running — placeholder for future implementation
-            if (Input != null && Input.KickPressed)
-            {
-                Debug.Log("[BallKick] Kick pressed while RUNNING — running kick not yet implemented, will be added in future.");
-            }
         }
 
         public override void LogicUpdate()
@@ -73,6 +68,12 @@ namespace SM64
 
         public override void PhysicsUpdate()
         {
+            if (Controller.IsAiming)
+            {
+                Controller.HorizontalVelocity = Vector3.zero;
+                return;
+            }
+
             Vector3 desiredDir = Controller.GetCameraRelativeInput(Input != null ? Input.MoveInput : Vector2.zero);
             Vector3 currentHoriz = Controller.HorizontalVelocity;
             float currentSpeed = currentHoriz.magnitude;
