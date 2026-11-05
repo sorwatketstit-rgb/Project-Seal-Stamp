@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3b896d62ee5d7a04bac100c1f82cfb9b
+guid: 47404b4954f690b4e91816db0165bd61
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -8,12 +8,12 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: BowMat
-    second: {fileID: 2100000, guid: c2a20d7d9ac000a498206379aa09163e, type: 2}
+    second: {fileID: 2100000, guid: 510b2737fa9c25f4bad617bc34cd0ad0, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: CloackMat
-    second: {fileID: 2100000, guid: ae1ceb8f23907fd44bbbcfd282a90476, type: 2}
+    second: {fileID: 2100000, guid: 9321a32a9c60db74f9fc7612ace3b9c5, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -23,32 +23,32 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: HairColorMat
-    second: {fileID: 2100000, guid: ee48ba20ec5ec2c478f9a5615563a2a7, type: 2}
+    second: {fileID: 2100000, guid: c182f3efb4d004e40b66a9dcee7285f7, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Hat
-    second: {fileID: 2100000, guid: cc5846140839f6c4b95b3cfc81f5e1da, type: 2}
+    second: {fileID: 2100000, guid: 1f4df4a931734b244b928f9e333c245c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Material.001
-    second: {fileID: 2100000, guid: 18d39c87702c63345a75e4f4d7a196d7, type: 2}
+    second: {fileID: 2100000, guid: 3ee3db1f3edb7254f989762f82400556, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Material.005
-    second: {fileID: 2100000, guid: 913ff6e082dc9a5438abe714a4617f99, type: 2}
+    second: {fileID: 2100000, guid: 3baa5ff64c5ead54d99d0704948ba5ec, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: ShirtMat
-    second: {fileID: 2100000, guid: 2a8e4500bde5195448352bbe5dde1bef, type: 2}
+    second: {fileID: 2100000, guid: 7aa4de92954e45e49bb85b39b9dd8b5e, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: SkinMat
-    second: {fileID: 2100000, guid: a35d4d4ee688fae4283c8cef71db9696, type: 2}
+    second: {fileID: 2100000, guid: 5bd89e407bce27b449e414db0f86c635, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
