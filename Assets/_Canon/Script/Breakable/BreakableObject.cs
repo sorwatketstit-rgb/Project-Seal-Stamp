@@ -6,70 +6,115 @@ namespace SM64
     /// <summary>
     /// Attach this to any GameObject on the "Breakable" layer.
     /// When Break() is called (e.g. by BallBreakTrigger) it:
-    ///   1. Plays an optional particle effect.
-    ///   2. Reveals the hidden contents GameObject (if assigned).
-    ///   3. Optionally destroys or disables itself.
-    ///   4. Fires UnityEvents so designers can wire up extra reactions (sounds, score, etc).
+    ///   1. Spawns/plays the break particle effect (detached, so it survives this object).
+    ///   2. Reveals the hidden content (detached, so it survives this object).
+    ///   3. Hides this object's visuals + colliders immediately.
+    ///   4. Destroys / disables this object after 'disposalDelay'.
+    ///   5. Fires UnityEvents.
+    ///
+    /// 'hiddenContent' and 'breakParticlePrefab' may be either prefab assets OR scene objects
+    /// (including children of this object, which are automatically unparented first).
     /// </summary>
     public class BreakableObject : MonoBehaviour
     {
         [Header("Hidden Contents")]
-        [Tooltip("GameObject to reveal when this object is broken. Can be a child or a separate object in the scene.")]
+        [Tooltip("Revealed on break. Can be a scene object (child or not) or a prefab asset (it gets instantiated).")]
         [SerializeField] private GameObject hiddenContent;
 
-        [Tooltip("If true, the hidden content is activated in-place. If false, the content is simply set active.")]
+        [Tooltip("Apply the launch velocity to the hidden content's Rigidbody (if it has one).")]
         [SerializeField] private bool popOutContent = true;
 
         [Tooltip("Launch velocity applied to the hidden content's Rigidbody (if any) when revealed.")]
         [SerializeField] private Vector3 contentLaunchVelocity = new Vector3(0f, 5f, 0f);
 
         [Header("Break VFX")]
-        [Tooltip("Particle effect prefab to spawn at this object's position on break.")]
+        [Tooltip("Particle effect (prefab asset or scene object). Played at this object's position on break.")]
         [SerializeField] private GameObject breakParticlePrefab;
 
-        [Tooltip("How long (seconds) before the particle effect is auto-destroyed. 0 = never auto-destroy.")]
+        [Tooltip("Seconds before the spawned particle effect is destroyed. 0 = never.")]
         [SerializeField] private float particleLifetime = 3f;
 
         [Header("Destroy / Disable")]
-        [Tooltip("How to handle this object after breaking.")]
         [SerializeField] private BreakDisposal disposal = BreakDisposal.Destroy;
 
-        [Tooltip("Delay before destroying / disabling this object (seconds). Lets particles finish first).")]
-        [SerializeField] private float disposalDelay = 0.1f;
+        [Tooltip("Seconds before this object is destroyed / disabled. Visuals + colliders are hidden immediately.")]
+        [SerializeField] private float disposalDelay = 0.5f;
+
+        [Tooltip("Immediately disable this object's renderers and colliders when broken.")]
+        [SerializeField] private bool hideVisualsOnBreak = true;
 
         [Header("State")]
         [SerializeField] private bool isBroken = false;
 
+        [Header("Debug")]
+        [SerializeField] private bool debugLogs = true;
+
         [Header("Events")]
         public UnityEvent onBreak;
 
-        /// <summary>True after Break() has been called once.</summary>
         public bool IsBroken => isBroken;
 
-        // ─────────────────────── Public API ───────────────────────
-
-        /// <summary>
-        /// Called by BallBreakTrigger (or any other system) to break this object.
-        /// Safe to call multiple times — only the first call does anything.
-        /// </summary>
         public void Break()
         {
-            if (isBroken) return;
+            if (isBroken)
+                return;
             isBroken = true;
 
+            // Order matters: detach/spawn everything we want to keep BEFORE hiding or destroying this object.
             SpawnBreakParticle();
             RevealContent();
+
+            if (hideVisualsOnBreak)
+                HideSelf();
+
             onBreak?.Invoke();
             DisposeThis();
         }
 
         // ─────────────────────── Internals ────────────────────────
 
+        /// <summary>
+        /// Returns a live scene instance of 'source': scene objects are detached from their parent
+        /// and reused, prefab assets are instantiated. The result is always active and unparented.
+        /// </summary>
+        private GameObject GetLiveInstance(GameObject source, Vector3 position, Quaternion rotation, bool keepSceneObjectPosition)
+        {
+            GameObject instance;
+
+            if (source.scene.IsValid())
+            {
+                instance = source;
+                instance.transform.SetParent(null, true); // keep world position/scale
+                if (!keepSceneObjectPosition)
+                    instance.transform.SetPositionAndRotation(position, rotation);
+            }
+            else
+            {
+                instance = Instantiate(source, position, rotation);
+            }
+
+            instance.SetActive(true);
+            return instance;
+        }
+
         private void SpawnBreakParticle()
         {
-            if (breakParticlePrefab == null) return;
+            if (breakParticlePrefab == null)
+            {
+                if (debugLogs)
+                    Debug.LogWarning("[BreakableObject] No break particle assigned.", this);
+                return;
+            }
 
-            GameObject vfx = Instantiate(breakParticlePrefab, transform.position, transform.rotation);
+            GameObject vfx = GetLiveInstance(breakParticlePrefab, transform.position, transform.rotation, false);
+
+            // Make sure every particle system actually plays (covers Play On Awake being off).
+            foreach (ParticleSystem ps in vfx.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ps.gameObject.SetActive(true);
+                ps.Clear(true);
+                ps.Play(true);
+            }
 
             if (particleLifetime > 0f)
                 Destroy(vfx, particleLifetime);
@@ -77,15 +122,30 @@ namespace SM64
 
         private void RevealContent()
         {
-            if (hiddenContent == null) return;
+            if (hiddenContent == null)
+            {
+                if (debugLogs)
+                    Debug.LogWarning("[BreakableObject] No hidden content assigned.", this);
+                return;
+            }
 
-            hiddenContent.SetActive(true);
+            // Scene object: stays where it was placed. Prefab asset: spawned at this object's position.
+            GameObject content = GetLiveInstance(hiddenContent, transform.position, Quaternion.identity, true);
 
-            if (popOutContent && hiddenContent.TryGetComponent(out Rigidbody rb))
+            if (popOutContent && content.TryGetComponent(out Rigidbody rb) && !rb.isKinematic)
             {
                 rb.linearVelocity = Vector3.zero;
                 rb.AddForce(contentLaunchVelocity, ForceMode.VelocityChange);
             }
+        }
+
+        private void HideSelf()
+        {
+            foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
+                r.enabled = false;
+
+            foreach (Collider c in GetComponentsInChildren<Collider>(true))
+                c.enabled = false;
         }
 
         private void DisposeThis()
@@ -104,7 +164,6 @@ namespace SM64
                     break;
 
                 case BreakDisposal.None:
-                    // keep the object alive — the designer handles it via onBreak events
                     break;
             }
         }
@@ -114,7 +173,7 @@ namespace SM64
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            if (hiddenContent == null) return;
+            if (hiddenContent == null || !hiddenContent.scene.IsValid()) return;
             Gizmos.color = new Color(1f, 0.8f, 0f, 0.6f);
             Gizmos.DrawWireSphere(hiddenContent.transform.position, 0.3f);
             Gizmos.DrawLine(transform.position, hiddenContent.transform.position);
@@ -125,12 +184,8 @@ namespace SM64
     /// <summary>What happens to the BreakableObject itself after breaking.</summary>
     public enum BreakDisposal
     {
-        /// <summary>Destroy the GameObject (default).</summary>
         Destroy,
-        /// <summary>Only disable the GameObject — keeps it in the scene.</summary>
         Disable,
-        /// <summary>Do nothing — handle disposal via onBreak events.</summary>
         None
     }
 }
-

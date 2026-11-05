@@ -1,11 +1,12 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace SM64
 {
     /// <summary>
-    /// Manages player death, respawn, and unstuck functionality.
-    /// Respawns the player at the single SpawnPoint in the game.
+    /// Manages player death, respawn, screen fading, and unstuck functionality.
+    /// Respawns the player at the single SpawnPoint in the game with a smooth screen fade.
     /// </summary>
     [DisallowMultipleComponent]
     public class PlayerRespawnManager : MonoBehaviour
@@ -22,6 +23,16 @@ namespace SM64
         [Tooltip("The designated spawn point. If unassigned, automatically located in scene.")]
         [SerializeField] private SpawnPoint spawnPoint;
 
+        [Header("Death Screen Fade")]
+        [Tooltip("Time in seconds to fade to black upon dying.")]
+        [SerializeField] private float deathFadeOutDuration = 0.35f;
+
+        [Tooltip("Time in seconds the screen stays completely black before fading in.")]
+        [SerializeField] private float deathFadeHoldDuration = 0.15f;
+
+        [Tooltip("Time in seconds to fade back in from black after respawning.")]
+        [SerializeField] private float deathFadeInDuration = 0.45f;
+
         [Header("Effects & Feedback")]
         [Tooltip("Optional VFX spawned at player position upon death.")]
         [SerializeField] private GameObject deathVFXPrefab;
@@ -37,6 +48,9 @@ namespace SM64
 
         private Vector3 _initialPlayerPosition;
         private Quaternion _initialPlayerRotation;
+        private bool _isRespawning;
+
+        public bool IsRespawning => _isRespawning;
 
         private void Awake()
         {
@@ -57,6 +71,9 @@ namespace SM64
                 _initialPlayerPosition = playerController.transform.position;
                 _initialPlayerRotation = playerController.transform.rotation;
             }
+
+            // Ensure ScreenFader is active in scene
+            EnsureScreenFader();
         }
 
         private void Start()
@@ -75,26 +92,89 @@ namespace SM64
             }
         }
 
+        private void EnsureScreenFader()
+        {
+            if (ScreenFader.Instance == null)
+            {
+                ScreenFader fader = FindFirstObjectByType<ScreenFader>();
+                if (fader == null)
+                {
+                    GameObject faderGo = new GameObject("ScreenFader");
+                    fader = faderGo.AddComponent<ScreenFader>();
+                }
+                fader.EnsureOverlayExists();
+            }
+        }
+
         /// <summary>
-        /// Handles player death (e.g. entering water while not in seal state) and initiates respawn.
+        /// Handles player death (e.g. entering water while not in seal state).
+        /// Triggers a screen fade to black, repositions the player at the spawn point, and fades back in.
         /// </summary>
         public void Die()
         {
-            if (playerController == null) return;
+            if (_isRespawning) return;
+
+            if (playerController == null)
+            {
+                playerController = FindFirstObjectByType<SM64PlayerController>();
+                if (playerController == null) return;
+            }
+
+            StartCoroutine(DeathFadeRoutine());
+        }
+
+        private IEnumerator DeathFadeRoutine()
+        {
+            _isRespawning = true;
+            EnsureScreenFader();
 
             OnPlayerDied?.Invoke();
 
-            if (deathVFXPrefab != null)
+            if (deathVFXPrefab != null && playerController != null)
             {
                 GameObject vfx = Instantiate(deathVFXPrefab, playerController.transform.position, Quaternion.identity);
                 Destroy(vfx, deathVFXLifetime);
             }
 
-            Respawn();
+            // Block player inputs during death sequence
+            if (playerController != null && playerController.Input != null)
+            {
+                playerController.Input.IsInputBlocked = true;
+            }
+
+            // 1. Fade screen out to black
+            if (ScreenFader.Instance != null && deathFadeOutDuration > 0f)
+            {
+                yield return ScreenFader.Instance.FadeOutRoutine(deathFadeOutDuration);
+            }
+
+            // 2. While screen is black, execute physical respawn and reset
+            ExecuteRespawn();
+
+            // 3. Optional hold on black screen
+            if (deathFadeHoldDuration > 0f)
+            {
+                yield return new WaitForSeconds(deathFadeHoldDuration);
+            }
+
+            // 4. Fade screen back in from black
+            if (ScreenFader.Instance != null && deathFadeInDuration > 0f)
+            {
+                yield return ScreenFader.Instance.FadeInRoutine(deathFadeInDuration);
+            }
+
+            // Restore player inputs
+            if (playerController != null && playerController.Input != null)
+            {
+                playerController.Input.IsInputBlocked = false;
+            }
+
+            _isRespawning = false;
+            OnPlayerRespawned?.Invoke();
         }
 
         /// <summary>
-        /// Triggered when the unstuck button is clicked. Closes the menu if open and respawns the player.
+        /// Triggered when the unstuck button is clicked. Closes the menu if open and respawns the player with fade.
         /// </summary>
         public void Unstuck()
         {
@@ -103,14 +183,19 @@ namespace SM64
                 GenshinMenuManager.Instance.CloseMenu();
             }
 
-            Respawn();
+            Die();
         }
 
         /// <summary>
-        /// Respawns the player at the SpawnPoint (or fallback initial position).
-        /// Resets character controller, velocities, states, and visual models.
+        /// Instantly respawns the player without a fade (used when direct repositioning is needed).
         /// </summary>
         public void Respawn()
+        {
+            ExecuteRespawn();
+            OnPlayerRespawned?.Invoke();
+        }
+
+        private void ExecuteRespawn()
         {
             if (playerController == null)
             {
@@ -160,7 +245,8 @@ namespace SM64
                 playerController.StateMachine.ChangeState(playerController.WalkingState);
             }
 
-            // 4. Grant grace period against immediate water death
+            // 4. Clear any tracked water colliders and grant grace period
+            playerController.ClearWaterColliders();
             playerController.GrantWaterGracePeriod(0.75f);
 
             // 5. Spawn respawn particle if assigned
@@ -176,9 +262,6 @@ namespace SM64
             {
                 cam.transform.position = targetPos - targetRot * Vector3.forward * 4.0f + Vector3.up * 1.5f;
             }
-
-            OnPlayerRespawned?.Invoke();
         }
     }
 }
-

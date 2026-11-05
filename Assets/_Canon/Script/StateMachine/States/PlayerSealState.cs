@@ -108,7 +108,7 @@ namespace SM64
         public override void LogicUpdate()
         {
             // Water check: if seal is in water, transition to swimming sub-state
-            if (Controller.CheckWaterContact(out _))
+            if (Controller.IsInWater)
             {
                 EnterSwim();
                 return;
@@ -218,6 +218,10 @@ namespace SM64
             Controller.VerticalVelocity = Controller.sealRevertFlingUpForce;
             Controller.HorizontalVelocity = forwardDir * Controller.sealRevertFlingForwardForce;
             Controller.CharacterController.Move(Vector3.up * 0.1f);
+
+            // Grant a short grace period (0.2s) so the upward impulse can initiate
+            // If the player remains inside water or lands back in water, they will die!
+            Controller.GrantWaterGracePeriod(0.2f);
 
             StateMachine.ChangeState(Controller.AirborneState);
         }

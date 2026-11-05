@@ -53,32 +53,22 @@ namespace SM64
 
         public override void LogicUpdate()
         {
-            // If we are no longer in or over water, check if we've landed on dry ground
-            if (!Controller.CheckWaterContact(out _))
+            // If we are no longer in water, return to land seal
+            if (!Controller.IsInWater)
             {
-                if (Controller.IsGrounded())
-                {
-                    ReturnToLandSeal();
-                }
+                ReturnToLandSeal();
             }
         }
 
         public override void PhysicsUpdate()
         {
             // 1. Water floating: find the water surface and adjust vertical velocity
-            Vector3 rayStart = Controller.transform.position + Vector3.up * 2.0f;
-            if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit waterHit, 5.0f, Controller.waterLayerMask, QueryTriggerInteraction.Collide))
-            {
-                float targetY = waterHit.point.y + Controller.swimFloatHeightOffset;
-                float currentY = Controller.transform.position.y;
-                float diffY = targetY - currentY;
+            float waterSurfaceY = Controller.GetWaterSurfaceY();
+            float targetY = waterSurfaceY + Controller.swimFloatHeightOffset;
+            float currentY = Controller.transform.position.y;
+            float diffY = targetY - currentY;
 
-                Controller.VerticalVelocity = diffY * Controller.swimBuoyancySpring;
-            }
-            else
-            {
-                Controller.VerticalVelocity = 0f;
-            }
+            Controller.VerticalVelocity = diffY * Controller.swimBuoyancySpring;
 
             // 2. Free, fast swimming movement (no periodic nudge interval)
             Vector2 moveInput = Input != null ? Input.MoveInput : Vector2.zero;
@@ -139,10 +129,11 @@ namespace SM64
             Controller.HorizontalVelocity = lookDir * Controller.swimFlingForwardForce;
 
             // Lift slightly to breach water boundary cleanly
-            Controller.CharacterController.Move(Vector3.up * 0.35f);
+            Controller.CharacterController.Move(Vector3.up * 0.45f);
 
-            // Grant grace period so upward trajectory does not instantly trigger water kill
-            Controller.GrantWaterGracePeriod(0.35f);
+            // Grant a short grace period (0.2s) so the upward impulse can initiate
+            // If the player remains inside water or lands back in water, they will die!
+            Controller.GrantWaterGracePeriod(0.2f);
 
             StateMachine.ChangeState(Controller.AirborneState);
         }

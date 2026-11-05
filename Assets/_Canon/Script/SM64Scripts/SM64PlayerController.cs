@@ -652,6 +652,68 @@ namespace SM64
         }
 
         /// <summary>
+        /// True when the player is currently inside a water volume.
+        /// Bypasses the grace timer so swim state can track water contact independently.
+        /// </summary>
+        public bool IsInWater
+        {
+            get
+            {
+                Vector3 playerPos = transform.position;
+                float radius = CharacterController != null ? CharacterController.radius : 0.5f;
+                float height = CharacterController != null ? CharacterController.height : 2.0f;
+
+                // Raycast downward
+                Vector3 rayStart = playerPos + Vector3.up * 1.5f;
+                float rayDistance = height + 1.8f;
+                if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, rayDistance, waterLayerMask, QueryTriggerInteraction.Collide))
+                {
+                    if (playerPos.y <= hit.point.y + 0.35f)
+                        return true;
+                }
+
+                // Overlap sphere at player mid-section
+                Vector3 checkCenter = playerPos + Vector3.up * (height * 0.3f);
+                return Physics.CheckSphere(checkCenter, radius + 0.15f, waterLayerMask, QueryTriggerInteraction.Collide);
+            }
+        }
+
+        /// <summary>
+        /// Returns the Y coordinate of the water surface directly below (or at) the player.
+        /// Falls back to the player's current Y if no water surface is found.
+        /// </summary>
+        public float GetWaterSurfaceY()
+        {
+            Vector3 playerPos = transform.position;
+            float height = CharacterController != null ? CharacterController.height : 2.0f;
+
+            // Cast downward from above the player to find the top of the water mesh trigger
+            Vector3 rayStart = playerPos + Vector3.up * 2f;
+            if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, height + 4f, waterLayerMask, QueryTriggerInteraction.Collide))
+            {
+                return hit.point.y;
+            }
+
+            // Fallback: cast upward from below in case player is fully submerged
+            if (Physics.Raycast(playerPos - Vector3.up * 1f, Vector3.up, out RaycastHit hitUp, height + 2f, waterLayerMask, QueryTriggerInteraction.Collide))
+            {
+                return hitUp.point.y;
+            }
+
+            return playerPos.y;
+        }
+
+        /// <summary>
+        /// Resets the water tracking state so that respawn does not immediately re-trigger water death.
+        /// Call this after repositioning the player at a dry spawn point.
+        /// </summary>
+        public void ClearWaterColliders()
+        {
+            _isDead = false;
+            // Grace period will be granted by the caller immediately after this call
+        }
+
+        /// <summary>
         /// Evaluates whether the player is currently contacting or submerged in the water collision layer.
         /// </summary>
         public bool CheckWaterContact(out RaycastHit surfaceHit)
