@@ -8,7 +8,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Run
-  m_Speed: 1
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
@@ -52,32 +52,6 @@ AnimatorState:
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
---- !u!1102 &-6758399766902414219
-AnimatorState:
-  serializedVersion: 6
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: DoubleJump
-  m_Speed: 1
-  m_CycleOffset: 0
-  m_Transitions: []
-  m_StateMachineBehaviours: []
-  m_Position: {x: 50, y: 50, z: 0}
-  m_IKOnFeet: 0
-  m_WriteDefaultValues: 1
-  m_Mirror: 0
-  m_SpeedParameterActive: 0
-  m_MirrorParameterActive: 0
-  m_CycleOffsetParameterActive: 0
-  m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 804bf141599e9d54c88d967420638bc3, type: 2}
-  m_Tag: 
-  m_SpeedParameter: 
-  m_MirrorParameter: 
-  m_CycleOffsetParameter: 
-  m_TimeParameter: 
 --- !u!1102 &-6726932295334094138
 AnimatorState:
   serializedVersion: 6
@@ -112,7 +86,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Leap
-  m_Speed: 1
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
@@ -158,9 +132,6 @@ AnimatorStateMachine:
     m_State: {fileID: 3563192376435846858}
     m_Position: {x: 890, y: 350, z: 0}
   - serializedVersion: 1
-    m_State: {fileID: -6758399766902414219}
-    m_Position: {x: 1150, y: 350, z: 0}
-  - serializedVersion: 1
     m_State: {fileID: -4199306427432007325}
     m_Position: {x: 1430, y: 350, z: 0}
   - serializedVersion: 1
@@ -168,7 +139,7 @@ AnimatorStateMachine:
     m_Position: {x: 1200, y: 490, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6726932295334094138}
-    m_Position: {x: 640, y: 240, z: 0}
+    m_Position: {x: 640, y: 230, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 3592762006412499611}
     m_Position: {x: 370, y: 400, z: 0}
@@ -176,11 +147,14 @@ AnimatorStateMachine:
     m_State: {fileID: 8078355475799604811}
     m_Position: {x: 370, y: 480, z: 0}
   - serializedVersion: 1
-    m_State: {fileID: 1216536527678692060}
-    m_Position: {x: 771.01874, y: 669.81775, z: 0}
+    m_State: {fileID: -247746838902883867}
+    m_Position: {x: 1150, y: 350, z: 0}
   - serializedVersion: 1
-    m_State: {fileID: -395864461941784469}
-    m_Position: {x: 1020, y: 670, z: 0}
+    m_State: {fileID: 827280502242055066}
+    m_Position: {x: 680, y: 670, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: -2172779864967689882}
+    m_Position: {x: 1030, y: 670, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -191,7 +165,7 @@ AnimatorStateMachine:
   m_ExitPosition: {x: 2050, y: 240, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
   m_DefaultState: {fileID: 7560499850495291756}
---- !u!1102 &-395864461941784469
+--- !u!1102 &-2172779864967689882
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -199,7 +173,33 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: WallSlide
-  m_Speed: 1
+  m_Speed: 1.5
+  m_CycleOffset: 0
+  m_Transitions: []
+  m_StateMachineBehaviours: []
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 0
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: 7400000, guid: 6faf747d399a37a4db98219da0aff56c, type: 2}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
+--- !u!1102 &-247746838902883867
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: DoubleJump
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
@@ -211,7 +211,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 0}
+  m_Motion: {fileID: 7400000, guid: 3a8416b370570e844a86e5c4fa6e318d, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -239,7 +239,7 @@ AnimatorController:
     m_IKPass: 0
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
---- !u!1102 &1216536527678692060
+--- !u!1102 &827280502242055066
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -247,7 +247,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: WallJump
-  m_Speed: 1
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
@@ -259,7 +259,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: a527980dd62f951418d702c03ede28c1, type: 2}
+  m_Motion: {fileID: 7400000, guid: 69ff88965624c794a811c409c35dd11d, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -299,7 +299,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Jump
-  m_Speed: 1
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []

@@ -17,6 +17,7 @@ public class LetterDeliveryManager : MonoBehaviour
     public event Action<LetterNPCData> OnDelivered;
     public event Action<int, int> OnProgressChanged;   // delivered, required
     public event Action<WorldNPCSet> OnWorldCompleted; // required count reached
+    public event Action OnProgressReset;               // ResetProgress() was called
 
     private readonly HashSet<string> delivered = new HashSet<string>();
     private bool worldCompletedFired;
@@ -91,12 +92,18 @@ public class LetterDeliveryManager : MonoBehaviour
         worldCompletedFired = CanProgress;
     }
 
-    [ContextMenu("Reset Saved Progress")]
+    /// <summary>
+    /// Clears all delivery progress for the current world.
+    /// Public + void, so a Button's OnClick() (or any UnityEvent) can call it directly:
+    /// drag this manager into the OnClick slot and pick LetterDeliveryManager > ResetProgress().
+    /// </summary>
     public void ResetProgress()
     {
         PlayerPrefs.DeleteKey(SaveKey);
         delivered.Clear();
         worldCompletedFired = false;
+
+        OnProgressReset?.Invoke();
         OnProgressChanged?.Invoke(0, RequiredCount);
     }
 }

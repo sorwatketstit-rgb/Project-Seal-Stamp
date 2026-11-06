@@ -42,12 +42,22 @@ namespace SM64
         [Tooltip("If true, uses smooth damping. If false, uses constant linear speed.")]
         [SerializeField] private bool useSmoothMovement = true;
 
-        [Header("Facing")]
+        [Header("Facing & Rotation")]
         [Tooltip("Pivot that marks the FRONT of the ball (an empty child object). The ball turns so this point faces the player while Moving and while returning from a kick. If empty, the transform's forward is used.")]
         [SerializeField] private Transform frontPoint;
 
         [Tooltip("How fast the ball turns toward the player, in degrees per second.")]
         [SerializeField] private float turnSpeed = 540f;
+
+        [Header("Rotation Constraints")]
+        [Tooltip("If true, locks the rotation on the X-axis (prevents pitching / tilting up and down).")]
+        [SerializeField] private bool lockXRotation = true;
+
+        [Tooltip("If true, locks the rotation on the Z-axis (prevents rolling / tilting sideways).")]
+        [SerializeField] private bool lockZRotation = true;
+
+        [Tooltip("If true, ignores vertical height difference when turning toward the player, keeping the ball perfectly level.")]
+        [SerializeField] private bool flattenFacingDirection = true;
 
         [Header("Idle Hover / Floating VFX")]
         [SerializeField] private bool enableHoverBobbing = true;
@@ -123,6 +133,7 @@ namespace SM64
         private Vector3 _basePosition;
         private Vector3 _smoothVelocity;
         private float _hoverTimer;
+        private Vector3 _initialEuler;
 
         // Runtime — kick
         private bool _kickActive;
@@ -158,6 +169,7 @@ namespace SM64
         {
             _controller = GetComponent<FloatingBallController>();
             _basePosition = transform.position;
+            _initialEuler = transform.eulerAngles;
             _hoverTimer = Random.Range(0f, 2f * Mathf.PI);
         }
 
@@ -184,11 +196,13 @@ namespace SM64
                     break;
 
                 case BallStage.Moving:
-                    if (HasTarget) FlyTowardTarget();
+                    if (HasTarget)
+                        FlyTowardTarget();
                     break;
 
                 case BallStage.Kicked:
-                    if (!_kickActive) BeginKick(_controller.KickForward);
+                    if (!_kickActive)
+                        BeginKick(_controller.KickForward);
                     UpdateKick();
                     break;
             }
@@ -213,11 +227,11 @@ namespace SM64
             }
         }
 
-        // ───────────────────────── Facing ─────────────────────────
+        // ───────────────────────── Facing & Constraints ─────────────────────────
 
         /// <summary>
         /// Turns the ball so its front faces the player — only while Moving and while arcing back
-        /// after a kick. In every other situation the rotation is left alone.
+        /// after a kick. Applies axis rotation constraints (locks X/Z tilt).
         /// </summary>
         private void UpdateFacing()
         {
@@ -225,14 +239,29 @@ namespace SM64
                 _controller.CurrentStage == BallStage.Moving ||
                 (_controller.CurrentStage == BallStage.Kicked && _kickActive && _kickPhase == KickPhase.Return);
 
-            if (!shouldFace || !HasTarget) return;
+            if (shouldFace && HasTarget)
+            {
+                Vector3 toTarget = TargetPosition - transform.position;
+                if (flattenFacingDirection)
+                {
+                    toTarget.y = 0f; // Ignore vertical offset so it only turns horizontally (Y-axis yaw)
+                }
 
-            Vector3 toTarget = TargetPosition - transform.position;
-            if (toTarget.sqrMagnitude < 0.0001f) return;
+                if (toTarget.sqrMagnitude > 0.0001f)
+                {
+                    Quaternion desired = Quaternion.FromToRotation(GetFrontDirection(), toTarget.normalized) * transform.rotation;
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation, desired, turnSpeed * Time.deltaTime);
+                }
+            }
 
-            // Smallest rotation that swings the current front direction onto the player direction.
-            Quaternion desired = Quaternion.FromToRotation(GetFrontDirection(), toTarget.normalized) * transform.rotation;
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, desired, turnSpeed * Time.deltaTime);
+            // Apply rotation constraints (Lock X and/or Z axes to prevent unwanted tilting/rolling)
+            if (lockXRotation || lockZRotation)
+            {
+                Vector3 currentEuler = transform.eulerAngles;
+                float x = lockXRotation ? _initialEuler.x : currentEuler.x;
+                float z = lockZRotation ? _initialEuler.z : currentEuler.z;
+                transform.eulerAngles = new Vector3(x, currentEuler.y, z);
+            }
         }
 
         /// <summary>World direction from the ball's pivot to its Front Point (falls back to transform.forward).</summary>
@@ -241,7 +270,8 @@ namespace SM64
             if (frontPoint != null)
             {
                 Vector3 dir = frontPoint.position - transform.position;
-                if (dir.sqrMagnitude > 0.0001f) return dir.normalized;
+                if (dir.sqrMagnitude > 0.0001f)
+                    return dir.normalized;
             }
             return transform.forward;
         }
@@ -268,15 +298,22 @@ namespace SM64
 
             switch (_kickPhase)
             {
-                case KickPhase.WindUp: UpdateWindUp(); break;
-                case KickPhase.Shoot:  UpdateShoot();  break;
-                case KickPhase.Return: UpdateReturn(); break;
+                case KickPhase.WindUp:
+                    UpdateWindUp();
+                    break;
+                case KickPhase.Shoot:
+                    UpdateShoot();
+                    break;
+                case KickPhase.Return:
+                    UpdateReturn();
+                    break;
             }
         }
 
         private Vector3 GetWindUpPosition()
         {
-            if (windUpPoint != null) return windUpPoint.position;
+            if (windUpPoint != null)
+                return windUpPoint.position;
             return _kickOrigin - _kickForward * fallbackWindUpBack + Vector3.up * fallbackWindUpHeight;
         }
 
@@ -285,7 +322,8 @@ namespace SM64
             Vector3 windUpPos = GetWindUpPosition(); // tracked live
             float t = Mathf.Clamp01(_phaseTimer / Mathf.Max(0.0001f, windUpDuration));
             float smooth = 1f - (1f - t) * (1f - t); // ease-out
-            if (PropellerEffect != null) PropellerEffect.SetActive(false);
+            if (PropellerEffect != null)
+                PropellerEffect.SetActive(false);
 
             _basePosition = t >= 1f ? windUpPos : Vector3.Lerp(_windUpStart, windUpPos, smooth);
 
@@ -300,7 +338,6 @@ namespace SM64
             Vector3 dir;
             if (_controller != null && _controller.Is3DKick)
             {
-                // Full 3D shot along all 3 axes as aimed by the player
                 dir = _kickForward;
             }
             else
@@ -313,12 +350,12 @@ namespace SM64
             _shotTimer = 0f;
             _phaseTimer = 0f;
             _kickPhase = KickPhase.Shoot;
-            if (SmokeObject != null) SmokeObject.SetActive(true);
+            if (SmokeObject != null)
+                SmokeObject.SetActive(true);
 
             _controller.NotifyKickShot();
         }
 
-        /// <summary>Simple projectile physics: momentum + gravity + drag + optional bounces.</summary>
         private void UpdateShoot()
         {
             float dt = Time.deltaTime;
@@ -350,7 +387,8 @@ namespace SM64
 
         private void BeginReturn()
         {
-            if (PropellerEffect != null) PropellerEffect.SetActive(true);
+            if (PropellerEffect != null)
+                PropellerEffect.SetActive(true);
             _returnStart = _basePosition;
             _returnControl = (_returnStart + _kickOrigin) * 0.5f
                              + Vector3.up * returnArcHeight
@@ -371,8 +409,9 @@ namespace SM64
                 _basePosition = _kickOrigin;
                 _shotVelocity = Vector3.zero;
                 _kickActive = false;
-                if (SmokeObject != null) SmokeObject.SetActive(false);
-                _controller.NotifyKickFinished(); // controller decides the next state
+                if (SmokeObject != null)
+                    SmokeObject.SetActive(false);
+                _controller.NotifyKickFinished();
             }
         }
 
@@ -397,7 +436,6 @@ namespace SM64
             }
         }
 
-        /// <summary>Teleports the ball and syncs the internal base position.</summary>
         public void SetPosition(Vector3 newPosition)
         {
             _basePosition = newPosition;
@@ -408,19 +446,20 @@ namespace SM64
 
         private void FindPlayerIfNeeded()
         {
-            if (playerTarget != null && playerTarget.gameObject.activeInHierarchy) return;
+            if (playerTarget != null && playerTarget.gameObject.activeInHierarchy)
+                return;
 
             if (!string.IsNullOrEmpty(playerTag))
             {
                 GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
-                if (playerObj != null) playerTarget = playerObj.transform;
+                if (playerObj != null)
+                    playerTarget = playerObj.transform;
             }
         }
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            // Follow target line
             if (playerTarget != null)
             {
                 Vector3 center = Application.isPlaying ? _basePosition : transform.position;
@@ -428,7 +467,6 @@ namespace SM64
                 Gizmos.DrawLine(center, playerTarget.position + targetOffset);
             }
 
-            // Front direction
             if (frontPoint != null)
             {
                 Gizmos.color = Color.blue;
@@ -436,7 +474,6 @@ namespace SM64
                 Gizmos.DrawWireSphere(frontPoint.position, 0.08f);
             }
 
-            // Wind-up point
             if (windUpPoint != null)
             {
                 Gizmos.color = Color.cyan;
@@ -452,7 +489,7 @@ namespace SM64
                 {
                     Gizmos.color = new Color(1f, 0.4f, 0f, 0.95f);
                     Gizmos.DrawLine(GetWindUpPosition(), _basePosition);
-                    Gizmos.DrawRay(_basePosition, _shotVelocity * 0.1f); // momentum
+                    Gizmos.DrawRay(_basePosition, _shotVelocity * 0.1f);
                 }
                 else if (_kickPhase == KickPhase.Return)
                 {

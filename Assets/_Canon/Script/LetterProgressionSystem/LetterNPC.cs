@@ -49,12 +49,22 @@ public class LetterNPC : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (interactable != null)
-            interactable.onDialogueEnd.RemoveListener(HandleDialogueEnd);
+        if (interactable != null) interactable.onDialogueEnd.RemoveListener(HandleDialogueEnd);
+        if (LetterDeliveryManager.Instance != null)
+            LetterDeliveryManager.Instance.OnProgressReset -= HandleProgressReset;
+    }
+
+    // After a reset, make the NPC play its first dialogue again and be deliverable again.
+    private void HandleProgressReset()
+    {
+        if (interactable != null) interactable.ResetInteractionState();
     }
 
     private void Start()
     {
+        if (LetterDeliveryManager.Instance != null)
+            LetterDeliveryManager.Instance.OnProgressReset += HandleProgressReset;
+
         // Already delivered in an earlier session: play the "again" dialogue and show the happy state.
         if (IsDelivered)
         {
@@ -67,10 +77,8 @@ public class LetterNPC : MonoBehaviour
     // is still false, because NPCInteractable only sets it when the dialogue actually finishes.
     private void HandleDialogueEnd()
     {
-        if (!deliverOnDialogueEnd)
-            return;
-        if (!interactable.HasInteracted)
-            return;
+        if (!deliverOnDialogueEnd) return;
+        if (!interactable.HasInteracted) return;
         TryDeliver();
     }
 
@@ -88,12 +96,10 @@ public class LetterNPC : MonoBehaviour
     public bool TryDeliver()
     {
         var manager = LetterDeliveryManager.Instance;
-        if (manager == null || data == null)
-            return false;
+        if (manager == null || data == null) return false;
 
         bool newDelivery = manager.TryDeliver(data);
-        if (newDelivery)
-            onDelivered?.Invoke();
+        if (newDelivery) onDelivered?.Invoke();
         return newDelivery;
     }
 
